@@ -15,7 +15,7 @@ export const MUSEUMS = [
     ],
     
     // Gunakan gambar denah transparan (PNG) agar menyatu dengan peta
-    floorPlanImage: 'https://via.placeholder.com/500x500.png?text=Denah+Transparan', 
+    floorPlanImage: 'https://res.cloudinary.com/dqxmywp1y/image/upload/v1764094518/Rectangle_17_ihbz2i.png', 
     
     description: 'Museum Sejarah Jakarta...',
     image: 'https://upload.wikimedia.org/wikipedia/commons/1/16/Jakarta_History_Museum_Front_View.jpg', 

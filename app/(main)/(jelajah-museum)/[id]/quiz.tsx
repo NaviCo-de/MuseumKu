@@ -28,7 +28,7 @@ export default function QuizScreen() {
   const generateQuiz = async (museumName: string) => {
     setLoading(true);
     try {
-      const prompt = `Buatkan 2 soal pilihan ganda tentang "${museumName}" dalam bahasa Indonesia. 
+      const prompt = `Buatkan 3 soal pilihan ganda tentang "${museumName}" dalam bahasa Indonesia dengan tingkat jawaban dari rendah, sedang, hingga sulit masing masing per soal 1. 
       Format output HARUS JSON murni tanpa markdown, array of objects dengan struktur:
       [
         {
@@ -112,16 +112,6 @@ export default function QuizScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#5D4037" />
-
-      {/* Header Coklat */}
-      <SafeAreaView edges={['top']} style={styles.header}>
-        <View style={styles.headerContent}>
-          <Image source={{ uri: 'https://i.pravatar.cc/100' }} style={styles.avatar} />
-          <Text style={styles.headerTitle}>MuseumKu</Text>
-          <TouchableOpacity><Ionicons name="ellipsis-vertical" size={24} color="#FFF" /></TouchableOpacity>
-        </View>
-      </SafeAreaView>
-
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
         {/* Navigasi Back Manual */}
