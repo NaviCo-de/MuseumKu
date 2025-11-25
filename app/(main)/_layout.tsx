@@ -37,7 +37,7 @@ export default function TabLayout() {
 
       {/* TAB 2: JELAJAH */}
       <Tabs.Screen
-        name="(jelajah-museum)/index"
+        name="(jelajah-museum)"
         options={{
           title: 'Museum',
           tabBarIcon: ({ color }) => (
