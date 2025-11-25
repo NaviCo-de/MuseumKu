@@ -3,6 +3,7 @@ import { View, Text, Button, TextInput, StyleSheet, Alert } from 'react-native';
 import { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/firebaseConfig';
+import { globalStyles } from '@/constants/styles';
 export default function LoginScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -25,7 +26,11 @@ export default function LoginScreen() {
         }
     }
     return (
-        <View>
+        <View
+            style={[{
+                paddingHorizontal: 38 
+            }]}
+        >
             <Text>Ini Halaman Login</Text>
             
             {/* Tombol pindah ke Register */}
@@ -34,14 +39,14 @@ export default function LoginScreen() {
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize='none'
-                style={styles.input}
+                style={globalStyles.authInput}
             />
             <TextInput 
                 placeholder='Password'
                 value={password}
                 onChangeText={setPassword}
                 autoCapitalize='none'
-                style={styles.input}
+                style={globalStyles.authInput}
             />
             <Button 
                 title="Login" 
