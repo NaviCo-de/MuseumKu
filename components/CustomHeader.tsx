@@ -80,7 +80,7 @@ export default function CustomHeader() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: Colors.cokelatTua.base, // Warna background Header
+    backgroundColor: Colors.cokelatMuda.base, // Warna background Header
   },
   headerContainer: {
     flexDirection: 'row',
@@ -93,9 +93,7 @@ const styles = StyleSheet.create({
   profileImage: {
     width: 40, 
     height: 40, 
-    borderRadius: 20, 
-    borderWidth: 2, 
-    borderColor: '#fff'
+    borderRadius: 20,
   },
   headerTitle: {
     fontSize: 20, 

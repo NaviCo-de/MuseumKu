@@ -46,11 +46,11 @@ export default function JelajahMuseumScreen() {
       {/* Search Bar Section */}
       <View style={styles.searchRow}>
         <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color={Colors.neutral[80]} style={{marginRight: 8}} />
+          <Ionicons name="search" size={20} color={Colors.red[60]} style={{marginRight: 8}} />
           <TextInput 
             placeholder="Cari Museum" 
             style={styles.searchInput}
-            placeholderTextColor={Colors.neutral[60]}
+            placeholderTextColor='#000000'
             value={searchQuery}
             onChangeText={(text) => handleSearch(text)}
           />
@@ -94,7 +94,7 @@ export default function JelajahMuseumScreen() {
             <Text style={styles.cardAddress} numberOfLines={2}>{item.address}</Text>
           </View>
 
-          <View style={{alignItems: 'center', justifyContent: 'space-between', gap: 15}}>
+          <View style={{alignItems: 'center', justifyContent: 'center', gap: 15, flexDirection: 'row'}}>
              <View style={styles.pointBadge}>
                 <Text style={styles.pointText}>24 PTS</Text>
              </View>
@@ -142,12 +142,13 @@ const styles = StyleSheet.create({
 
   // Container untuk Judul & Search (bukan Header Navigasi)
   topContentContainer: {
+    marginTop: 50,
     paddingHorizontal: 20,
     marginBottom: 10,
   },
 
   heroTitle: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: '#000', marginBottom: 5 },
-  heroSubtitle: { fontSize: 14, textAlign: 'center', color: '#666', marginBottom: 20 },
+  heroSubtitle: { fontSize: 12, textAlign: 'center', color: '#666', marginBottom: 20 },
   
   searchRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 25, gap: 15 },
   
@@ -156,9 +157,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     alignItems: 'center', 
     backgroundColor: '#FFF', // Search bar tetap putih
-    borderWidth: 1, 
-    borderColor: '#DDD', // Border lebih halus
-    borderRadius: 25, 
+    borderWidth: 2, 
+    borderColor: Colors.red[60], // Border lebih halus
+    borderRadius: 17, 
     paddingHorizontal: 15, 
     height: 45 
   },
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1, 
     shadowRadius: 4 
   },
-  cardContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  cardContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 6, color: '#000' },
   cardAddress: { fontSize: 12, color: '#666', lineHeight: 18 },
   
