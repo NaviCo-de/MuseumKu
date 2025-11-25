@@ -24,7 +24,7 @@ export default function RootLayout() {
     const inAuthGroup = segments[0] === '(auth)';
     
     if (user && inAuthGroup) {
-      router.replace('/(tabs)');
+      router.replace('/(main)/(homepage)');
     } else if (!user && !inAuthGroup) {
       router.replace('/(auth)/login');
     }
@@ -41,8 +41,8 @@ export default function RootLayout() {
   // 3. DAFTAR PINTU (Stack)
   return (
     <Stack>
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
+      <Stack.Screen name="(main)" options={{ headerShown: false }} />
       <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
     </Stack>
   );
