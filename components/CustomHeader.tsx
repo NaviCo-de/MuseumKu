@@ -5,9 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
 import { Colors } from '../constants/Colors';
+import { useRouter } from 'expo-router';
 
 export default function CustomHeader() {
   const [menuVisible, setMenuVisible] = useState(false);
+  const router = useRouter();
 
   const handleLogout = async () => {
     try {
@@ -16,6 +18,15 @@ export default function CustomHeader() {
     } catch (error: any) {
       Alert.alert("Gagal Logout", error.message);
     }
+  };
+
+  const handleToProfile = () => {
+    setMenuVisible(false); // Tutup menu dulu
+    
+    // Arahkan ke file profile kamu.
+    // Berdasarkan gambar: app/(main)/(homepage)/profile/index.tsx
+    // Maka rutenya adalah:
+    router.push('/(main)/(homepage)/profile'); 
   };
 
   return (
@@ -51,7 +62,7 @@ export default function CustomHeader() {
           <View style={styles.menuBox}>
             <Text style={styles.menuLabel}>◈ Isi Menu</Text>
             
-            <TouchableOpacity style={styles.menuItem} onPress={() => setMenuVisible(false)}>
+            <TouchableOpacity style={styles.menuItem} onPress={handleToProfile}>
               <Text style={styles.menuText}>Akun Saya</Text>
               <Text>👤</Text> 
             </TouchableOpacity>
