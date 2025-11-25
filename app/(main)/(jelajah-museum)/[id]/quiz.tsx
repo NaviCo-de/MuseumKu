@@ -107,15 +107,6 @@ export default function QuizScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#5D4037" />
 
-      {/* Header Coklat */}
-      <SafeAreaView edges={['top']} style={styles.header}>
-        <View style={styles.headerContent}>
-          <Image source={{ uri: 'https://i.pravatar.cc/100' }} style={styles.avatar} />
-          <Text style={styles.headerTitle}>MuseumKu</Text>
-          <TouchableOpacity><Ionicons name="ellipsis-vertical" size={24} color="#FFF" /></TouchableOpacity>
-        </View>
-      </SafeAreaView>
-
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
         {/* Navigasi Back */}
