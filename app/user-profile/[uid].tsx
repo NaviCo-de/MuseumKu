@@ -8,10 +8,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function OtherUserProfileScreen() {
-  const { uid } = useLocalSearchParams(); // Menangkap ID dari URL
+  const { uid } = useLocalSearchParams(); 
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const targetUid = Array.isArray(uid) ? uid[0] : uid; // Pastikan UID string
+  const targetUid = Array.isArray(uid) ? uid[0] : uid;
 
   const [user, setUser] = useState<any>(null);
   const [userPosts, setUserPosts] = useState<any[]>([]);
@@ -22,7 +22,6 @@ export default function OtherUserProfileScreen() {
   useEffect(() => {
     if (!targetUid) return;
 
-    // 1. Ambil Data User Target
     const fetchUser = async () => {
       try {
         const uDoc = await getDoc(doc(db, "users", targetUid));
@@ -30,7 +29,6 @@ export default function OtherUserProfileScreen() {
       } catch (e) { console.error(e); }
     };
 
-    // 2. Cek Status Pertemanan (Realtime)
     let unsubFriend = () => {};
     if (auth.currentUser) {
        const friendRef = doc(db, "users", auth.currentUser.uid, "friends", targetUid);
@@ -39,7 +37,6 @@ export default function OtherUserProfileScreen() {
        });
     }
 
-    // 3. Ambil Postingan Dia (Realtime)
     const q = query(
       collection(db, "posts"), 
       where("userId", "==", targetUid),
@@ -63,7 +60,6 @@ export default function OtherUserProfileScreen() {
     };
   }, [targetUid]);
 
-  // LOGIC TOMBOL ADD / UNFRIEND
   const handleToggleFriend = async () => {
     if (!auth.currentUser || !user) return;
     setFriendLoading(true);
@@ -73,10 +69,8 @@ export default function OtherUserProfileScreen() {
       const friendRef = doc(db, "users", myUid, "friends", targetUid);
 
       if (isFriend) {
-        // Unfriend
         await deleteDoc(friendRef);
       } else {
-        // Add Friend
         await setDoc(friendRef, {
           addedAt: new Date(),
           username: user.username,
@@ -90,7 +84,6 @@ export default function OtherUserProfileScreen() {
     }
   };
 
-  // Render Satu Postingan
   const renderPost = ({ item }: { item: any }) => (
     <View style={styles.postCard}>
       <View style={styles.postHeader}>
@@ -109,10 +102,8 @@ export default function OtherUserProfileScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Matikan Header Bawaan Stack */}
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* --- HEADER COKELAT --- */}
       <View style={styles.headerBackground}>
         <View style={[styles.headerTop, { marginTop: insets.top }]}>
           <TouchableOpacity onPress={() => router.back()}>
@@ -126,7 +117,9 @@ export default function OtherUserProfileScreen() {
         </View>
 
         <View style={styles.userInfoContainer}>
-          <View style={{ width: 134 }} /> {/* Spacer untuk Avatar */}
+          {/* Spacer untuk Avatar (Tanpa Komentar Inline) */}
+          <View style={{ width: 150 }} />
+          
           <View style={{ flex: 1 }}>
             <Text style={styles.headerName}>{user?.username || "User"}</Text>
             <Text style={styles.headerHandle}>@{user?.username?.toLowerCase().replace(/\s/g, '')}</Text>
@@ -134,7 +127,6 @@ export default function OtherUserProfileScreen() {
         </View>
       </View>
 
-      {/* --- AVATAR OVERLAP --- */}
       <View style={styles.avatarWrapper}>
         <Image 
           source={{ uri: user?.photoProfile || "https://i.pravatar.cc/150" }} 
@@ -142,10 +134,9 @@ export default function OtherUserProfileScreen() {
         />
       </View>
 
-      {/* --- KONTEN --- */}
       <ScrollView style={styles.content}>
         
-        {/* TOMBOL ADD FRIEND (Di kanan atas) */}
+        {/* TOMBOL ADD FRIEND */}
         <View style={{ alignItems: 'flex-end', paddingHorizontal: 20, marginTop: -45, marginBottom: 20 }}>
            <TouchableOpacity 
               style={[styles.actionBtn, isFriend ? styles.btnAdded : styles.btnAdd]}
@@ -196,14 +187,10 @@ export default function OtherUserProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  
-  // HEADER
   headerBackground: {
     backgroundColor: Colors.cokelatMuda.base,
     paddingBottom: 30,
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 20, 
-    borderBottomRightRadius: 20,
   },
   headerTop: { 
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 
@@ -212,21 +199,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row', backgroundColor: 'white', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, alignItems: 'center', gap: 5 
   },
   badgeText: { fontSize: 12, fontWeight: 'bold', color: Colors.cokelatTua.base },
-  
   userInfoContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
-  headerName: { fontSize: 24, fontWeight: 'bold', color: 'white' },
-  headerHandle: { color: '#E0E0E0', fontSize: 14 },
-
-  // AVATAR
+  headerName: { fontSize: 30, fontWeight: 'bold', color: 'white' },
+  headerHandle: { color: '#E0E0E0', fontSize: 12 },
   avatarWrapper: { paddingHorizontal: 20, marginTop: -57, marginBottom: 10 },
   bigAvatar: { 
     width: 114, height: 114, borderRadius: 57, 
-    backgroundColor: '#ddd', borderWidth: 4, borderColor: '#fff' 
   },
-
   content: { flex: 1 },
-
-  // BUTTONS
   actionBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 16, paddingVertical: 8,
@@ -235,11 +215,8 @@ const styles = StyleSheet.create({
   btnAdd: { backgroundColor: Colors.cokelatTua.base },
   btnAdded: { backgroundColor: '#E0E0E0', borderWidth: 1, borderColor: '#ccc' },
   btnText: { fontWeight: 'bold', color: 'white', fontSize: 14 },
-
   sectionHeader: { paddingHorizontal: 20, marginBottom: 15 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-
-  // CARD
   postCard: {
     width: 260, backgroundColor: 'white', borderRadius: 12,
     marginRight: 15, padding: 12, borderWidth: 1, borderColor: '#eee',

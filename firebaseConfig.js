@@ -3,7 +3,7 @@ import { initializeAuth, getReactNativePersistence, browserLocalPersistence } fr
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { Platform } from "react-native"; // <--- Import Platform buat cek OS
+import { Platform } from "react-native";
 
 const firebaseConfig = {
   apiKey: "AIzaSyARXcfJvF4jssUs2Sm0b0hmIjzx876pnVM",
