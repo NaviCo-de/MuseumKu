@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, TouchableOpacity, Button } from 'react-native';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, onSnapshot } from 'firebase/firestore';
 import { db } from '../../../firebaseConfig';
 import { Colors } from '../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons'; // Icon Love, Comment, Share
@@ -14,26 +14,26 @@ export default function Homepage() {
 
   // Fetch Data saat layar dibuka
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        // Ambil data posts, urutkan dari yg terbaru
-        const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
-        const querySnapshot = await getDocs(q);
-        
-        const data = querySnapshot.docs.map(doc => ({
+      // 1. Buat Query
+      const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+
+      // 2. Pasang "CCTV" (Realtime Listener)
+      // onSnapshot akan jalan PERTAMA KALI, dan SETIAP KALI ada perubahan di database
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const data = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
         
         setPosts(data);
-      } catch (e) {
-        console.error(e);
-      } finally {
+        setLoading(false); // Matikan loading setelah data pertama didapat
+      }, (error) => {
+        console.error("Error fetching posts:", error);
         setLoading(false);
-      }
-    };
+      });
 
-    fetchPosts();
+      // 3. Cabut CCTV saat halaman dihancurkan (Cleanup function)
+      return () => unsubscribe();
   }, []);
 
   // Komponen Kartu Postingan (Sesuai Desain)
