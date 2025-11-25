@@ -1,35 +1,51 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, ScrollView } from 'react-native';
 import { db, auth } from '@/firebaseConfig'; // Pastikan path ../ benar
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, onSnapshot, orderBy } from 'firebase/firestore';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [myPosts, setMyPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (auth.currentUser) {
-        const uDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-        if (uDoc.exists()) setUser(uDoc.data());
-      }
-    };
+    if (!auth.currentUser) return;
 
-    const fetchMyPosts = async () => {
-      if (auth.currentUser) {
-        const q = query(collection(db, "posts"), where("userId", "==", auth.currentUser.uid));
-        const querySnapshot = await getDocs(q);
-        const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setMyPosts(data);
-      }
+    // 1. Ambil Data User Profil (Sekali saja cukup, jarang berubah)
+    const fetchProfile = async () => {
+      const uDoc = await getDoc(doc(db, "users", auth.currentUser!.uid));
+      if (uDoc.exists()) setUser(uDoc.data());
     };
 
     fetchProfile();
-    fetchMyPosts();
+
+    // 2. Ambil Postingan SAYA secara REALTIME (CCTV)
+    // Tambah orderBy biar yang baru ada di kiri
+    const q = query(
+      collection(db, "posts"), 
+      where("userId", "==", auth.currentUser.uid),
+      orderBy("createdAt", "desc") 
+    );
+
+    // Pasang Listener
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data() 
+      }));
+      setMyPosts(data);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetch profile posts:", error);
+      setLoading(false);
+    });
+
+    // Cabut Listener saat keluar halaman
+    return () => unsubscribe();
   }, []);
 
   const renderMyPost = ({ item }: { item: any }) => (
@@ -50,6 +66,7 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
       {/* --- HEADER COKELAT (Background) --- */}
       <View style={styles.headerBackground}>
         {/* Baris 1: Tombol Back & Badge */}
@@ -66,7 +83,7 @@ export default function ProfileScreen() {
         {/* Baris 2: Info User (Nama & Stats) */}
         <View style={styles.userInfoContainer}>
           {/* Placeholder kosong di kiri untuk tempat Avatar nanti */}
-          <View style={{ width: 90 }} /> 
+          <View style={{ width: 150 }} /> 
 
           {/* Nama & Handle */}
           <View style={{ flex: 1 }}>
@@ -137,12 +154,10 @@ const styles = StyleSheet.create({
   
   // HEADER STYLES
   headerBackground: {
-    backgroundColor: Colors.cokelatTua.base,
+    backgroundColor: Colors.cokelatMuda.base,
     paddingTop: 50, // Safe area
     paddingBottom: 20,
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 20, // Opsional: lengkungan bawah
-    borderBottomRightRadius: 20,
   },
   headerTop: {
     flexDirection: 'row',
@@ -160,13 +175,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerName: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: 'bold',
     color: 'white',
   },
   headerHandle: {
     color: '#E0E0E0',
-    fontSize: 14,
+    fontSize: 12,
   },
   statsContainer: {
     alignItems: 'center',
@@ -184,16 +199,13 @@ const styles = StyleSheet.create({
   // AVATAR STYLES
   avatarWrapper: {
     paddingHorizontal: 20,
-    marginTop: -45, // Ini yang bikin overlap ke atas (masuk ke area cokelat)
+    marginTop: -57,
     marginBottom: 10,
   },
   bigAvatar: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    borderWidth: 4,
-    borderColor: 'white', // Border putih tebal biar misah dari background
-    backgroundColor: '#ddd',
+    width: 114,
+    height: 114,
+    borderRadius: 60,
   },
 
   // CONTENT STYLES
