@@ -81,6 +81,7 @@ export default function Homepage() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <Text>Hi, </Text>
       {loading ? (
         <ActivityIndicator size="large" color={Colors.cokelatTua.base} style={{marginTop: 50}}/>
       ) : (
