@@ -2,17 +2,19 @@ import { Tabs } from 'expo-router';
 import { Image } from 'react-native';
 import { Colors } from '../../constants/Colors';
 import CustomHeader from '../../components/CustomHeader';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.cokelatTua.base,
-        tabBarInactiveTintColor: Colors.neutral[80],
+        tabBarActiveTintColor: Colors.cokelatMuda.base,
+        tabBarInactiveTintColor: '#000000',
         headerShown: true,
         header: () => <CustomHeader />,
         tabBarStyle: {
-          height: 70, // Agak tinggi biar enak dipencet
-          paddingBottom: 10,
+          height: 60 + insets.bottom, // Agak tinggi biar enak dipencet
+          paddingBottom: insets.bottom + 5,
           paddingTop: 10,
           backgroundColor: Colors.neutral[10],
         },

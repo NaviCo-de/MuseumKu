@@ -24,7 +24,6 @@ if (Platform.OS === 'web') {
   // Kalau lagi dibuka di Browser/Laptop, pakai ini:
   authPersistence = browserLocalPersistence;
 } else {
-  // Kalau lagi dibuka di HP (Android/iOS), pakai AsyncStorage:
   authPersistence = getReactNativePersistence(ReactNativeAsyncStorage);
 }
 
