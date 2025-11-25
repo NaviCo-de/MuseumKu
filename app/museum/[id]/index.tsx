@@ -1,123 +1,122 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
-  FlatList, 
   Image, 
   TouchableOpacity, 
-  TextInput, 
-  StatusBar,
-  Platform
+  ScrollView, 
+  Platform,
+  StatusBar
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/Colors';
-import { MUSEUMS } from '@/constants/data'; // Pastikan file data.ts sudah dibuat
+// Sesuaikan path import ini
+import { Colors } from '@/constants/Colors'; 
+import { MUSEUMS } from '@/constants/data'; 
 
-export default function JelajahMuseumScreen() {
+export default function MuseumDetailScreen() {
+  const { id } = useLocalSearchParams();
   const router = useRouter();
+  const museum = MUSEUMS.find(m => m.id === id);
+  const [isFavorited, setIsFavorited] = useState(false);
 
-  // --- Header Component ---
-  const renderHeader = () => (
-    <View style={styles.mainContentContainer}>
-      {/* 1. Teks Ajakkan */}
-      <Text style={styles.heroTitle}>Ayo, Lengkapi Kunjungan MuseumMu!</Text>
-      <Text style={styles.heroSubtitle}>Kunjungi museum untuk memperoleh poin dan lencana!</Text>
-
-      {/* 2. Search Bar & Filter */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color={Colors.cokelatTua[100]} style={{marginRight: 8}} />
-          <TextInput 
-            placeholder="Cari Museum" 
-            style={styles.searchInput}
-            placeholderTextColor={Colors.neutral[60]}
-          />
-        </View>
-        
-        {/* Tombol Filter dengan Badge */}
-        <TouchableOpacity style={styles.filterButton}>
-          <Ionicons name="options-outline" size={28} color="#000" />
-          <View style={styles.badgeNotification}>
-            <Text style={styles.badgeText}>3</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      {/* 3. Judul Section */}
-      <Text style={styles.sectionTitle}>Rekomendasi Museum Untukmu</Text>
-    </View>
-  );
-
-  // --- Card Item Component ---
-  const renderItem = ({ item }: { item: typeof MUSEUMS[0] }) => (
-    <TouchableOpacity 
-      style={styles.card} 
-      onPress={() => router.push(`/museum/${item.id}`)}
-      activeOpacity={0.9}
-    >
-      <View style={styles.cardContent}>
-        {/* Kolom Kiri: Teks Info */}
-        <View style={{flex: 1, marginRight: 10}}>
-          <Text style={styles.cardTitle}>{item.name}</Text>
-          <Text style={styles.cardAddress} numberOfLines={2}>{item.address}</Text>
-        </View>
-
-        {/* Kolom Kanan: Badge Poin & Love */}
-        <View style={{alignItems: 'center', justifyContent: 'space-between'}}>
-           <View style={styles.pointBadge}>
-              <Text style={styles.pointText}>24 PTS</Text>
-           </View>
-           <TouchableOpacity style={{marginTop: 10}}>
-              <Ionicons name="heart-outline" size={24} color="#000" />
-           </TouchableOpacity>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+  if (!museum) return null;
 
   return (
     <View style={{flex: 1, backgroundColor: '#FFF'}}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.cokelatMuda.base} />
-      
-      {/* --- CUSTOM APP BAR (Coklat) --- */}
+
+      {/* --- HEADER ATAS (Coklat) --- */}
       <SafeAreaView edges={['top']} style={styles.customHeader}>
         <View style={styles.headerInner}>
-          {/* Profile Picture (Placeholder) */}
           <Image 
             source={{ uri: 'https://i.pravatar.cc/100' }} 
             style={styles.avatar} 
           />
-          
-          {/* Title Tengah */}
           <Text style={styles.headerTitleText}>MuseumKu</Text>
-          
-          {/* Menu Kanan */}
           <TouchableOpacity>
             <Ionicons name="ellipsis-vertical" size={24} color="#FFF" />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
 
-      {/* --- LIST CONTENT --- */}
-      <FlatList
-        data={MUSEUMS}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={renderHeader}
-        contentContainerStyle={{ paddingBottom: 20 }}
-        showsVerticalScrollIndicator={false}
-      />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Tombol Back */}
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={28} color="#000" />
+        </TouchableOpacity>
+
+        {/* Judul & Alamat */}
+        <View style={styles.titleSection}>
+          <Text style={styles.museumName}>{museum.name}</Text>
+          <Text style={styles.museumAddress}>{museum.address}</Text>
+        </View>
+
+        {/* Section Gambar & Intro */}
+        <View style={styles.contentRow}>
+          <Image source={{ uri: museum.image }} style={styles.mainImage} />
+          <View style={styles.introTextContainer}>
+            <Text style={styles.descText} numberOfLines={9}>
+              {/* Mengambil sebagian teks dari deskripsi untuk simulasi layout kolom kanan */}
+              {museum.description}
+            </Text>
+          </View>
+        </View>
+
+        {/* Deskripsi Lanjutan (Full Text) */}
+        <Text style={[styles.descText, {marginTop: 15, textAlign: 'justify'}]}>
+          Di dalamnya terdapat artefak arkeologis, mebel antik bergaya kolonial, peta kuno, hingga peninggalan penting seperti meriam Si Jagur dan penjara bawah tanah yang dulu digunakan pada masa penjajahan. Selain sebagai tempat wisata edukatif, museum ini juga menjadi saksi perkembangan Jakarta dari kota pelabuhan kecil menjadi ibu kota Indonesia yang modern.
+        </Text>
+
+        {/* Info Harga Tiket */}
+        <View style={styles.ticketSection}>
+          <Text style={styles.ticketHeader}>Harga Tiket:</Text>
+          <View style={styles.ticketRow}>
+            <View>
+              <Text style={styles.ticketLabel}>Senin - Jumat</Text>
+              <Text style={styles.ticketLabel}>Sabtu - Minggu</Text>
+            </View>
+            <View>
+              <Text style={styles.ticketPrice}>Rp {museum.price.toLocaleString('id-ID')}/orang</Text>
+              <Text style={styles.ticketPrice}>Rp 12.000/orang</Text>
+            </View>
+            
+            {/* Love Icon di sebelah harga (sesuai desain) */}
+            <TouchableOpacity onPress={() => setIsFavorited(!isFavorited)} style={{justifyContent: 'center', paddingLeft: 20}}>
+               <Ionicons 
+                 name={isFavorited ? "heart" : "heart-outline"} 
+                 size={32} 
+                 color={isFavorited ? Colors.red.base : "#000"} 
+               />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Tombol Aksi */}
+        <View style={styles.actionButtons}>
+          <TouchableOpacity 
+            style={styles.primaryButton}
+            onPress={() => router.push(`/museum/${id}/payment`)}
+          >
+            <Text style={styles.primaryButtonText}>Kunjungi Sekarang</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonText}>Kunjungi Bersama Teman</Text>
+          </TouchableOpacity>
+        </View>
+
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  // Header Atas (Coklat)
+  // Header (Sama persis dengan halaman sebelumnya)
   customHeader: {
-    backgroundColor: '#8D6E63', // Sesuaikan dengan warna coklat di screenshot (mirip Colors.cokelatMuda.base)
+    backgroundColor: '#8D6E63',
     paddingBottom: 15,
   },
   headerInner: {
@@ -128,134 +127,116 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#FFF'
+    width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#FFF'
   },
   headerTitleText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFF',
-    fontFamily: Platform.OS === 'ios' ? 'serif' : 'Roboto', // Biar fontnya agak klasik kayak di gambar
+    fontSize: 24, fontWeight: 'bold', color: '#FFF',
+    fontFamily: Platform.OS === 'ios' ? 'serif' : 'Roboto', 
   },
 
-  // Container Utama
-  mainContentContainer: {
+  // Content Styles
+  scrollContent: {
     padding: 20,
+    paddingBottom: 40,
   },
-
-  // Hero Section
-  heroTitle: {
+  backButton: {
+    marginBottom: 15,
+  },
+  titleSection: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  museumName: {
     fontSize: 22,
     fontWeight: 'bold',
     textAlign: 'center',
+    marginBottom: 8,
     color: '#000',
-    marginBottom: 5,
   },
-  heroSubtitle: {
-    fontSize: 14,
+  museumAddress: {
+    fontSize: 13,
     textAlign: 'center',
-    color: '#666',
-    marginBottom: 20,
+    color: '#000',
+    lineHeight: 18,
+    paddingHorizontal: 10,
   },
 
-  // Search Bar
-  searchContainer: {
+  // Row Image & Text
+  contentRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 25,
+    marginBottom: 5,
+    gap: 15,
   },
-  searchBar: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: Colors.cokelatTua.base, // Border coklat
-    borderRadius: 25, // Bulat banget
-    paddingHorizontal: 15,
-    height: 45,
-    marginRight: 10,
+  mainImage: {
+    width: 160,
+    height: 160, // Kotak sesuai desain
+    borderRadius: 0, // Desain kotak tajam atau radius kecil
+    backgroundColor: '#EEE',
   },
-  searchInput: {
+  introTextContainer: {
     flex: 1,
+  },
+  descText: {
+    fontSize: 13,
+    color: '#000',
+    lineHeight: 19,
+    textAlign: 'left', // Di gambar terlihat rata kiri/justify
+  },
+
+  // Ticket Info
+  ticketSection: {
+    marginTop: 25,
+    marginBottom: 30,
+  },
+  ticketHeader: {
     fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 8,
     color: '#000',
   },
-  filterButton: {
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badgeNotification: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    backgroundColor: '#8D2424', // Merah tua
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  badgeText: {
-    color: '#FFF',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-
-  // Section Title
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#000',
-  },
-
-  // Card Style
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    marginHorizontal: 20,
-    marginBottom: 12,
-    padding: 15,
-    // Shadow
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    borderWidth: 1,
-    borderColor: '#F0F0F0'
-  },
-  cardContent: {
+  ticketRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center', // Biar icon love vertikal tengah
   },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 4,
+  ticketLabel: {
+    fontSize: 13,
     color: '#000',
+    marginBottom: 4,
   },
-  cardAddress: {
-    fontSize: 12,
-    color: '#666',
-    lineHeight: 16,
+  ticketPrice: {
+    fontSize: 13,
+    color: '#000',
+    marginBottom: 4,
   },
-  pointBadge: {
-    backgroundColor: '#75544B', // Coklat tua buat badge
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+
+  // Buttons
+  actionButtons: {
+    gap: 15,
+    alignItems: 'center',
   },
-  pointText: {
+  primaryButton: {
+    backgroundColor: '#3E2723', // Coklat sangat tua (mirip warna kopi)
+    width: '80%',
+    paddingVertical: 14,
+    borderRadius: 25,
+    alignItems: 'center',
+  },
+  primaryButtonText: {
     color: '#FFF',
-    fontSize: 10,
     fontWeight: 'bold',
-  }
+    fontSize: 16,
+  },
+  secondaryButton: {
+    backgroundColor: '#795548', // Coklat lebih muda
+    width: '80%',
+    paddingVertical: 14,
+    borderRadius: 25,
+    alignItems: 'center',
+  },
+  secondaryButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });

@@ -5,14 +5,13 @@ import QRCode from 'react-native-qrcode-svg';
 import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-// Gunakan relative path biar aman
+// Pastikan path ini sesuai dengan struktur foldermu
 import { Colors } from '../../../constants/Colors'; 
 import { MUSEUMS } from '../../../constants/data';
 
 const { width } = Dimensions.get('window');
 
-// Style JSON untuk menyembunyikan semua elemen Google Maps (Jalan, Label, dll)
-// Hasilnya peta akan jadi kanvas putih bersih.
+// Style JSON untuk menyembunyikan elemen Google Maps (Jalan, Label, dll) agar jadi putih bersih
 const BLANK_MAP_STYLE = [
   {
     "elementType": "geometry",
@@ -50,10 +49,10 @@ export default function JourneyScreen() {
   const museum = MUSEUMS.find(m => m.id === id);
 
   const [locationPermission, setLocationPermission] = useState(false);
-  const [userLocation, setUserLocation] = useState<any>(null);
   const [showQR, setShowQR] = useState(false); 
   
   // Progress Hardcode sesuai desain "2/3"
+  // Nanti bisa dibikin dinamis berdasarkan state check-in
   const currentStep = 1; 
   const totalStep = museum?.checkpoints.length || 3;
 
@@ -65,10 +64,6 @@ export default function JourneyScreen() {
         return;
       }
       setLocationPermission(true);
-      
-      // Ambil lokasi sekali untuk inisialisasi (opsional)
-      let location = await Location.getCurrentPositionAsync({});
-      setUserLocation(location.coords);
     })();
   }, []);
 
@@ -93,26 +88,26 @@ export default function JourneyScreen() {
         <MapView
           style={styles.map}
           provider={PROVIDER_GOOGLE}
-          customMapStyle={BLANK_MAP_STYLE} // INI KUNCINYA: Map jadi putih bersih
+          customMapStyle={BLANK_MAP_STYLE} // Membuat peta jadi putih bersih
           showsUserLocation={true} 
           showsMyLocationButton={false}
-          // Kunci kamera map di area overlay museum
+          // Kamera map fokus ke area museum
           initialRegion={{
             latitude: museum.latitude,
             longitude: museum.longitude,
-            latitudeDelta: 0.0008, // Zoom sangat dekat
+            latitudeDelta: 0.0008, // Zoom level sangat dekat
             longitudeDelta: 0.0008,
           }}
         >
           {/* Gambar Denah (Overlay) */}
+          {/* FIX: Kita tambahkan 'as ...' di props bounds untuk memperbaiki error TypeScript */}
           <Overlay 
             image={{ uri: museum.floorPlanImage }}
-            bounds={museum.overlayBounds} 
+            bounds={museum.overlayBounds as [[number, number], [number, number]]} 
             opacity={1.0} 
           />
 
-          {/* Marker Pin Merah (Seperti di Desain) */}
-          {/* Ini bisa kita pakai untuk menunjukkan 'Lokasi Target' atau 'Lokasi User' manual */}
+          {/* Marker Pin Merah (Lokasi Target) */}
           <Marker 
             coordinate={{latitude: museum.latitude, longitude: museum.longitude}}
           >
@@ -144,7 +139,7 @@ export default function JourneyScreen() {
         <Text style={styles.nextInfo}>Checkpoint berikutnya:{"\n"}Ruang Jayakarta</Text>
       </View>
 
-      {/* MODAL QR CODE (Sama kayak sebelumnya) */}
+      {/* MODAL QR CODE */}
       <Modal
         visible={showQR}
         transparent={true}
@@ -166,6 +161,7 @@ export default function JourneyScreen() {
             </View>
         </View>
       </Modal>
+      
     </View>
   );
 }
@@ -178,7 +174,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#000' },
   headerSubtitle: { fontSize: 14, color: '#666' },
 
-  // Map Styling (Kotak Putih Bersih)
+  // Map Styling
   mapContainer: {
     height: 300, 
     width: '100%',
@@ -195,11 +191,11 @@ const styles = StyleSheet.create({
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   labelLokasi: { fontSize: 12, fontWeight: 'bold', color: '#000', marginBottom: 4 },
   lokasiValue: { fontSize: 18, color: '#333' },
-  progressText: { fontSize: 42, fontWeight: 'bold', color: Colors.cokelatTua.base }, // Angka Besar 2/3
+  progressText: { fontSize: 42, fontWeight: 'bold', color: Colors.cokelatTua.base }, 
 
   // Button
   checkpointButton: {
-    backgroundColor: '#5D4037', // Warna Coklat Tua sesuai desain
+    backgroundColor: '#5D4037', 
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -221,3 +217,4 @@ const styles = StyleSheet.create({
   closeButton: { padding: 10 },
   closeText: { color: 'red', fontWeight: 'bold' }
 });
+
