@@ -7,13 +7,19 @@ import { globalStyles } from '@/constants/styles';
 export default function LoginScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
     const router = useRouter(); // <--- Hook navigasi
 
     const handleLogin = async () => {
         if (!email || !password) return Alert.alert("Error", "Isi semua kolom!");
+        setLoading(true);
         try {
             await signInWithEmailAndPassword(auth, email, password)
+            console.log("nyampe sini ga"); 
         } catch (error: any) {
+            console.log("kalo sini?"); 
+            console.log("ERROR LOGIN:", error); 
+            console.log("ERROR CODE:", error.code);
             let errorMessage = "Login gagal.";
       
             // Translate error Firebase biar user gak bingung
@@ -23,6 +29,8 @@ export default function LoginScreen() {
             if (error.code === 'auth/invalid-credential') errorMessage = "Email atau password salah.";
 
             Alert.alert("Gagal Masuk", errorMessage);
+        } finally {
+            setLoading(false)
         }
     }
     return (
@@ -45,12 +53,14 @@ export default function LoginScreen() {
                 placeholder='Password'
                 value={password}
                 onChangeText={setPassword}
+                secureTextEntry
                 autoCapitalize='none'
                 style={globalStyles.authInput}
             />
             <Button 
-                title="Login" 
+                title={loading ? "Loading..." : "Login"} 
                 onPress={handleLogin} 
+                disabled={loading}
             />
             <Button 
                 title="Belum punya akun? Daftar" 
