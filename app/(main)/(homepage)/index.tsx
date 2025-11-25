@@ -92,7 +92,6 @@ export default function Homepage() {
           showsVerticalScrollIndicator={false}
         />
       )}
-      <Button title="ISI DATABASE" onPress={seedDatabase} />
     </View>
   );
 }

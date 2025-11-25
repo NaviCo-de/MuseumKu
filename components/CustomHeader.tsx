@@ -26,7 +26,7 @@ export default function CustomHeader() {
     // Arahkan ke file profile kamu.
     // Berdasarkan gambar: app/(main)/(homepage)/profile/index.tsx
     // Maka rutenya adalah:
-    router.push('/(main)/(homepage)/profile'); 
+    router.push('/(main)/(profile)'); 
   };
 
   return (
