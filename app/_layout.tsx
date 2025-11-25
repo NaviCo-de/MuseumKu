@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../firebaseConfig'; // Pastikan path ini benar
+import { auth } from '../firebaseConfig'; 
 import { View, ActivityIndicator } from 'react-native';
 
 export default function RootLayout() {
@@ -9,7 +9,9 @@ export default function RootLayout() {
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
   const segments = useSegments();
+  const navigationState = useRootNavigationState(); // <--- INI KUNCINYA
 
+  // 1. Cek Status Firebase
   useEffect(() => {
     const subscriber = onAuthStateChanged(auth, (userState) => {
       setUser(userState);
@@ -18,29 +20,33 @@ export default function RootLayout() {
     return subscriber;
   }, []);
 
+  // 2. Logic Redirect yang Aman
   useEffect(() => {
-    if (initializing) return;
+    if (initializing || !navigationState?.key) return; // Tunggu sampai navigasi siap
+
     const inAuthGroup = segments[0] === '(auth)';
+
     if (user && inAuthGroup) {
+      // User ada, tapi masih di halaman login -> Tendang ke Home
       router.replace('/(main)/(homepage)');
-    } else if (!user && !inAuthGroup) {
+    } else if (!user && segments[0] !== '(auth)') {
+      // User gak ada, tapi coba masuk main -> Tendang ke Login
       router.replace('/(auth)/login');
     }
-  }, [user, initializing]);
+  }, [user, initializing, segments, navigationState?.key]);
 
   if (initializing) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#895737" />
       </View>
     );
   }
 
-  // 3. DAFTAR PINTU (Stack)
   return (
-    <Stack>
-      <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
-      <Stack.Screen name="(main)" options={{ headerShown: false }} />
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(main)" />
       <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
     </Stack>
   );
