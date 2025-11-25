@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, TouchableOpacity, Button } from 'react-native';
-import { collection, getDocs, orderBy, query, onSnapshot } from 'firebase/firestore';
+import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { collection, orderBy, query, onSnapshot } from 'firebase/firestore';
 import { db } from '../../../firebaseConfig';
 import { Colors } from '../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons'; // Icon Love, Comment, Share
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { seedDatabase } from '@/utils/seeder';
 
 export default function Homepage() {
   const insets = useSafeAreaInsets();

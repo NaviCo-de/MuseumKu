@@ -18,7 +18,7 @@ export default function RootLayout() {
       if (initializing) setInitializing(false);
     });
     return subscriber;
-  }, []);
+  }, [initializing]);
 
   // 2. Logic Redirect yang Aman
   useEffect(() => {
@@ -33,7 +33,7 @@ export default function RootLayout() {
       // User gak ada, tapi coba masuk main -> Tendang ke Login
       router.replace('/(auth)/login');
     }
-  }, [user, initializing, segments, navigationState?.key]);
+  }, [user, initializing, segments, navigationState?.key, router]);
 
   if (initializing) {
     return (

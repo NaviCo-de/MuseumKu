@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, ScrollView } from 'react-native';
 import { db, auth } from '@/firebaseConfig'; // Pastikan path ../ benar
-import { collection, query, where, getDocs, doc, getDoc, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, doc, getDoc, onSnapshot, orderBy } from 'firebase/firestore';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
@@ -10,7 +10,6 @@ export default function ProfileScreen() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [myPosts, setMyPosts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -38,10 +37,8 @@ export default function ProfileScreen() {
         ...doc.data() 
       }));
       setMyPosts(data);
-      setLoading(false);
     }, (error) => {
       console.error("Error fetch profile posts:", error);
-      setLoading(false);
     });
 
     // Cabut Listener saat keluar halaman
