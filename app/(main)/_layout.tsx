@@ -76,6 +76,13 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="(profile)/index" // Pastikan path-nya sesuai lokasi file profile kamu
+        options={{
+          href: null, // <--- INI KUNCINYA: Nilai null artinya "Jangan bikin tombol tab"
+        }}
+      />
     </Tabs>
   );
 }

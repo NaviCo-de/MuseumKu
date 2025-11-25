@@ -33,7 +33,6 @@ export default function CreatePostScreen() {
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true, // Biar bisa crop kotak
       aspect: [4, 3],
       quality: 0.5, // Kompres biar upload cepet
     });
