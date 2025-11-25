@@ -18,10 +18,14 @@ export default function OtherUserProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [isFriend, setIsFriend] = useState(false);
   const [friendLoading, setFriendLoading] = useState(false);
+  
+  // 1. TAMBAH STATE JUMLAH TEMAN
+  const [friendCount, setFriendCount] = useState(0);
 
   useEffect(() => {
     if (!targetUid) return;
 
+    // A. Ambil Data User Target
     const fetchUser = async () => {
       try {
         const uDoc = await getDoc(doc(db, "users", targetUid));
@@ -29,6 +33,7 @@ export default function OtherUserProfileScreen() {
       } catch (e) { console.error(e); }
     };
 
+    // B. Cek Status Pertemanan (Apakah SAYA berteman dengan DIA?)
     let unsubFriend = () => {};
     if (auth.currentUser) {
        const friendRef = doc(db, "users", auth.currentUser.uid, "friends", targetUid);
@@ -37,6 +42,7 @@ export default function OtherUserProfileScreen() {
        });
     }
 
+    // C. Ambil Postingan Dia
     const q = query(
       collection(db, "posts"), 
       where("userId", "==", targetUid),
@@ -52,11 +58,18 @@ export default function OtherUserProfileScreen() {
         setLoading(false);
     });
 
+    // D. HITUNG JUMLAH TEMAN DIA (Realtime)
+    // Kita intip folder 'friends' milik si targetUid
+    const unsubFriendCount = onSnapshot(collection(db, "users", targetUid, "friends"), (snapshot) => {
+      setFriendCount(snapshot.size);
+    });
+
     fetchUser();
 
     return () => {
       unsubPosts();
       unsubFriend();
+      unsubFriendCount(); // Jangan lupa dimatikan
     };
   }, [targetUid]);
 
@@ -66,16 +79,48 @@ export default function OtherUserProfileScreen() {
 
     try {
       const myUid = auth.currentUser.uid;
-      const friendRef = doc(db, "users", myUid, "friends", targetUid);
+      
+      // Referensi di database SAYA (Saya add dia)
+      const myFriendRef = doc(db, "users", myUid, "friends", targetUid);
+      
+      // Referensi di database DIA (Dia juga harus add saya biar jumlah temannya nambah)
+      // Catatan: Untuk sistem follower/following beda lagi, tapi untuk "Friend" biasanya 2 arah.
+      // Untuk Hackathon ini, kita asumsi add friend = follow (1 arah dulu biar simpel logikanya).
+      // Kalau mau 2 arah otomatis, harus pakai Cloud Functions (Backend). 
+      // Jadi di sini kita cuma update di sisi KITA dulu. 
+      // *TAPI* efeknya jumlah teman di profil dia TIDAK AKAN NAMBAH kalau kita cuma update DB kita.
+      
+      // SOLUSI HACKATHON (BIAR ANGKA DIA NAMBAH):
+      // Kita "paksa" tambahkan data di collection friends DIA juga.
+      const targetFriendRef = doc(db, "users", targetUid, "friends", myUid);
 
       if (isFriend) {
-        await deleteDoc(friendRef);
+        // Unfriend (Hapus dua-duanya)
+        await deleteDoc(myFriendRef);
+        await deleteDoc(targetFriendRef);
       } else {
-        await setDoc(friendRef, {
-          addedAt: new Date(),
+        // Add Friend (Tulis dua-duanya)
+        const now = new Date();
+        
+        // 1. Di daftar teman saya
+        await setDoc(myFriendRef, {
+          addedAt: now,
           username: user.username,
           photoProfile: user.photoProfile
         });
+
+        // 2. Di daftar teman dia (Biar angkanya nambah)
+        // Kita butuh data profil kita sendiri dulu
+        const myProfileSnap = await getDoc(doc(db, "users", myUid));
+        const myProfile = myProfileSnap.data();
+
+        if (myProfile) {
+          await setDoc(targetFriendRef, {
+            addedAt: now,
+            username: myProfile.username,
+            photoProfile: myProfile.photoProfile
+          });
+        }
       }
     } catch (error) {
       Alert.alert("Gagal", "Terjadi kesalahan koneksi.");
@@ -92,7 +137,6 @@ export default function OtherUserProfileScreen() {
       </View>
       <Image source={{ uri: item.imageURL }} style={styles.postImage} />
       <Text style={styles.postCaption} numberOfLines={2}>{item.caption}</Text>
-      
       <View style={styles.postActions}>
         <Ionicons name="heart-outline" size={20} color="#555" />
         <Ionicons name="chatbubble-outline" size={20} color="#555" />
@@ -117,12 +161,16 @@ export default function OtherUserProfileScreen() {
         </View>
 
         <View style={styles.userInfoContainer}>
-          {/* Spacer untuk Avatar (Tanpa Komentar Inline) */}
-          <View style={{ width: 150 }} />
-          
+          <View style={{ width: 134 }} /> 
           <View style={{ flex: 1 }}>
             <Text style={styles.headerName}>{user?.username || "User"}</Text>
             <Text style={styles.headerHandle}>@{user?.username?.toLowerCase().replace(/\s/g, '')}</Text>
+          </View>
+          
+          <View style={styles.statsContainer}>
+            {/* 2. TAMPILKAN ANGKA REALTIME */}
+            <Text style={styles.statsNumber}>{friendCount}</Text>
+            <Text style={styles.statsLabel}>Teman</Text>
           </View>
         </View>
       </View>
@@ -135,8 +183,6 @@ export default function OtherUserProfileScreen() {
       </View>
 
       <ScrollView style={styles.content}>
-        
-        {/* TOMBOL ADD FRIEND */}
         <View style={{ alignItems: 'flex-end', paddingHorizontal: 20, marginTop: -45, marginBottom: 20 }}>
            <TouchableOpacity 
               style={[styles.actionBtn, isFriend ? styles.btnAdded : styles.btnAdd]}
@@ -160,7 +206,6 @@ export default function OtherUserProfileScreen() {
            </TouchableOpacity>
         </View>
 
-        {/* SECTION POSTINGAN */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Postingan {user?.username}</Text>
         </View>
@@ -179,12 +224,12 @@ export default function OtherUserProfileScreen() {
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
           />
         )}
-
       </ScrollView>
     </View>
   );
 }
 
+// ... Styles tetap sama (Copy dari kode sebelumnya jika perlu, atau biarkan file yang ada)
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   headerBackground: {
@@ -202,9 +247,12 @@ const styles = StyleSheet.create({
   userInfoContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
   headerName: { fontSize: 30, fontWeight: 'bold', color: 'white' },
   headerHandle: { color: '#E0E0E0', fontSize: 12 },
+  statsContainer: { alignItems: 'center' },
+  statsNumber: { fontSize: 24, fontWeight: 'bold', color: 'white' },
+  statsLabel: { fontSize: 12, color: '#E0E0E0' },
   avatarWrapper: { paddingHorizontal: 20, marginTop: -57, marginBottom: 10 },
   bigAvatar: { 
-    width: 114, height: 114, borderRadius: 57, 
+    width: 114, height: 114, borderRadius: 57,
   },
   content: { flex: 1 },
   actionBtn: {

@@ -21,7 +21,6 @@ export default function AddFriendScreen() {
   const [addedList, setAddedList] = useState<string[]>([]); 
 
   // 1. FETCH DATA (Realtime)
-  // 1. FETCH DATA (Realtime)
   useEffect(() => {
     if (!auth.currentUser) return;
     const myUid = auth.currentUser.uid;
