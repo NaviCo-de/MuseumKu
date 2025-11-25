@@ -10,106 +10,52 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
+import { useAchievements } from '@/hooks/useAchievements';
 
 type FilterKey = 'semua' | 'aktif' | 'selesai';
 
-type Achievement = {
-  id: string;
-  title: string;
-  description: string;
-  progress: number;
-  target: number;
-  reward: string;
-  rewardPoints?: number;
-  category: 'kunjungan' | 'kuis' | 'berbagi' | 'streak';
-};
-
-const ACHIEVEMENTS: Achievement[] = [
-  {
-    id: 'visit-1',
-    title: 'Kunjungan Perdana',
-    description: 'Selesaikan perjalanan museum pertamamu.',
-    progress: 1,
-    target: 1,
-    reward: '+50 poin',
-    rewardPoints: 50,
-    category: 'kunjungan',
-  },
-  {
-    id: 'visit-3',
-    title: 'Penjelajah Kota Tua',
-    description: 'Kunjungi 3 museum berbeda di Jakarta.',
-    progress: 2,
-    target: 3,
-    reward: 'Badge Perintis',
-    category: 'kunjungan',
-  },
-  {
-    id: 'quiz-3',
-    title: 'Cendekia Museum',
-    description: 'Selesaikan 3 kuis setelah kunjungan.',
-    progress: 2,
-    target: 3,
-    reward: '+70 poin',
-    rewardPoints: 70,
-    category: 'kuis',
-  },
-  {
-    id: 'share-1',
-    title: 'Cerita Pertama',
-    description: 'Bagikan 1 postingan perjalananmu.',
-    progress: 1,
-    target: 1,
-    reward: 'Badge Storyteller',
-    category: 'berbagi',
-  },
-  {
-    id: 'streak-7',
-    title: 'Streak Mingguan',
-    description: 'Check-in 7 hari berturut-turut.',
-    progress: 5,
-    target: 7,
-    reward: '+120 poin',
-    rewardPoints: 120,
-    category: 'streak',
-  },
-];
+type AchievementItem = ReturnType<typeof useAchievements>['achievements'][number];
 
 export default function AchievementScreen() {
   const router = useRouter();
+  const {
+    achievements,
+    completedCount,
+    points,
+    stats,
+    hasCheckedInToday,
+    claimAchievement,
+    recordDailyCheckIn,
+  } = useAchievements();
   const [filter, setFilter] = useState<FilterKey>('semua');
-  const [claimed, setClaimed] = useState<Record<string, boolean>>({
-    'visit-1': true,
-  });
-  const [points, setPoints] = useState(320);
-
-  const completedCount = useMemo(
-    () =>
-      ACHIEVEMENTS.filter(
-        a => claimed[a.id] || a.progress >= a.target
-      ).length,
-    [claimed]
-  );
 
   const filteredAchievements = useMemo(() => {
-    return ACHIEVEMENTS.filter(item => {
-      const isDone = item.progress >= item.target || claimed[item.id];
+    return achievements.filter(item => {
+      const isDone = item.isComplete || item.isClaimed;
       if (filter === 'aktif') return !isDone;
       if (filter === 'selesai') return isDone;
       return true;
     });
-  }, [filter, claimed]);
+  }, [achievements, filter]);
 
-  const handleClaim = (achievement: Achievement) => {
-    const alreadyClaimed = claimed[achievement.id];
-    const completed = achievement.progress >= achievement.target;
-    if (alreadyClaimed || !completed) return;
-
-    setClaimed(prev => ({ ...prev, [achievement.id]: true }));
-    if (achievement.rewardPoints) {
-      setPoints(prev => prev + achievement.rewardPoints);
+  const handleClaim = (achievement: AchievementItem) => {
+    const result = claimAchievement(achievement.id);
+    if (!result.success) {
+      const message =
+        result.reason === 'Belum selesai'
+          ? 'Selesaikan pencapaian ini dulu sebelum klaim hadiah.'
+          : result.reason === 'Sudah diklaim'
+          ? 'Reward sudah kamu dapatkan.'
+          : 'Achievement tidak ditemukan.';
+      Alert.alert('Tidak bisa klaim', message);
+      return;
     }
-    Alert.alert('Hadiah diklaim', `Reward ${achievement.reward} berhasil ditambahkan.`);
+
+    const rewardText =
+      achievement.rewardPoints && achievement.rewardPoints > 0
+        ? `Reward ${achievement.reward} berhasil ditambahkan.`
+        : 'Reward berhasil ditambahkan.';
+    Alert.alert('Hadiah diklaim', rewardText);
   };
 
   const renderFilter = (key: FilterKey, label: string) => {
@@ -135,9 +81,18 @@ export default function AchievementScreen() {
     );
   };
 
-  const renderAchievement = (achievement: Achievement) => {
-    const isClaimed = claimed[achievement.id];
-    const isComplete = achievement.progress >= achievement.target;
+  const handleDailyCheckIn = () => {
+    const updated = recordDailyCheckIn();
+    if (updated) {
+      Alert.alert('Check-in tersimpan', 'Streak kamu sudah diperbarui.');
+    } else {
+      Alert.alert('Check-in sudah dilakukan', 'Kamu sudah check-in hari ini.');
+    }
+  };
+
+  const renderAchievement = (achievement: AchievementItem) => {
+    const isClaimed = achievement.isClaimed;
+    const isComplete = achievement.isComplete;
     const progressPct = Math.min(achievement.progress / achievement.target, 1);
 
     const buttonLabel = isClaimed
@@ -219,11 +174,11 @@ export default function AchievementScreen() {
       contentContainerStyle={{ paddingBottom: 24 }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.hero}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.heroTitle}>Pencapaianmu</Text>
-          <Text style={styles.heroSubtitle}>
-            Kumpulkan poin, buka lencana, dan lanjutkan perjalanan museum.
+        <View style={styles.hero}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.heroTitle}>Pencapaianmu</Text>
+            <Text style={styles.heroSubtitle}>
+              Kumpulkan poin, buka lencana, dan lanjutkan perjalanan museum.
           </Text>
 
           <View style={styles.heroBadges}>
@@ -233,8 +188,30 @@ export default function AchievementScreen() {
             </View>
             <View style={styles.statChip}>
               <Ionicons name="flame" size={16} color="#FFF" />
-              <Text style={styles.statText}>Streak 5 hari</Text>
+              <Text style={styles.statText}>Streak {stats.streak} hari</Text>
             </View>
+            <TouchableOpacity
+              style={[
+                styles.checkInButton,
+                hasCheckedInToday && styles.checkInButtonDone,
+              ]}
+              onPress={handleDailyCheckIn}
+              disabled={hasCheckedInToday}
+            >
+              <Ionicons
+                name="calendar"
+                size={14}
+                color={hasCheckedInToday ? Colors.neutral[80] : Colors.cokelatTua.base}
+              />
+              <Text
+                style={[
+                  styles.checkInText,
+                  hasCheckedInToday && { color: Colors.neutral[80] },
+                ]}
+              >
+                {hasCheckedInToday ? 'Sudah check-in hari ini' : 'Check-in harian'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -296,6 +273,7 @@ const styles = StyleSheet.create({
   heroBadges: {
     flexDirection: 'row',
     gap: 8,
+    flexWrap: 'wrap',
   },
   statChip: {
     flexDirection: 'row',
@@ -308,6 +286,26 @@ const styles = StyleSheet.create({
   },
   statText: {
     color: '#FFF',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  checkInButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: Colors.cokelatTua.base,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+  checkInButtonDone: {
+    borderColor: Colors.neutral[60],
+    backgroundColor: Colors.neutral[30],
+  },
+  checkInText: {
+    color: Colors.cokelatTua.base,
     fontWeight: '700',
     fontSize: 12,
   },

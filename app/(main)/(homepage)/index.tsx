@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, TouchableOpacity, Share, Alert } from 'react-native';
 import { collection, orderBy, query, onSnapshot } from 'firebase/firestore';
 import { db } from '../../../firebaseConfig';
 import { Colors } from '../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons'; // Icon Love, Comment, Share
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAchievements } from '@/hooks/useAchievements';
 
 export default function Homepage() {
   const insets = useSafeAreaInsets();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { recordShare } = useAchievements();
 
   // Fetch Data saat layar dibuka
   useEffect(() => {
@@ -36,6 +38,19 @@ export default function Homepage() {
   }, []);
 
   // Komponen Kartu Postingan (Sesuai Desain)
+  const handleShare = async (item: any) => {
+    try {
+      const result = await Share.share({
+        message: `${item.caption}\nLokasi: ${item.location}`,
+      });
+      if (result.action === Share.sharedAction) {
+        recordShare();
+      }
+    } catch {
+      Alert.alert('Gagal membagikan', 'Coba lagi beberapa saat lagi.');
+    }
+  };
+
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.card}>
       {/* Header Post: Foto User, Nama, Lokasi/Tanggal */}
@@ -71,7 +86,7 @@ export default function Homepage() {
           <Text style={styles.actionText}>{item.comments}</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.actionBtn}>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => handleShare(item)}>
           <Ionicons name="share-social-outline" size={22} color="black" />
         </TouchableOpacity>
       </View>

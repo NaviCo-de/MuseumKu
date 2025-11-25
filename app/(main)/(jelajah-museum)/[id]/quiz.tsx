@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, StatusBar, Image, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, StatusBar, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { MUSEUMS } from '@/constants/data';
+import { useAchievements } from '@/hooks/useAchievements';
 
 // --- KONFIGURASI GEMINI ---
 // Ganti ini dengan API Key asli Anda
@@ -13,6 +13,7 @@ export default function QuizScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const museum = MUSEUMS.find(m => m.id === id);
+  const { recordQuizCompletion } = useAchievements();
 
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,6 +93,8 @@ export default function QuizScreen() {
             correctCount++;
         }
     });
+
+    recordQuizCompletion();
 
     Alert.alert(
         "Hasil Kuis",

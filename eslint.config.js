@@ -16,6 +16,9 @@ module.exports = defineConfig([
           extensions: ['.js', '.jsx', '.ts', '.tsx'],
         },
       },
+      'import/parsers': {
+        '@typescript-eslint/parser': ['.ts', '.tsx'],
+      },
     },
   },
 ]);
