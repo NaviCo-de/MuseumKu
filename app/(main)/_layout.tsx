@@ -1,14 +1,15 @@
 import { Tabs } from 'expo-router';
 import { Image } from 'react-native';
 import { Colors } from '../../constants/Colors';
-
+import CustomHeader from '../../components/CustomHeader';
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors.cokelatTua.base,
         tabBarInactiveTintColor: Colors.neutral[80],
-        headerShown: false,
+        headerShown: true,
+        header: () => <CustomHeader />,
         tabBarStyle: {
           height: 70, // Agak tinggi biar enak dipencet
           paddingBottom: 10,
@@ -40,7 +41,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <Image
               source={require('../../assets/images/museum_not_chosen.png')}
-              style={{ width: 24, height: 24, tintColor: color }}
+              style={{ width: 45, height: 45, tintColor: color }}
             />
           ),
         }}
