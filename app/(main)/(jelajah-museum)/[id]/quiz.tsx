@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MUSEUMS } from '@/constants/data';
 
 // --- KONFIGURASI GEMINI ---
-// Ganti ini dengan API Key asli Anda dari Google AI Studio
+// Ganti ini dengan API Key asli Anda
 const GEMINI_API_KEY = "YOUR_API_KEY_HERE"; 
 
 export default function QuizScreen() {
@@ -16,7 +16,7 @@ export default function QuizScreen() {
 
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedAnswers, setSelectedAnswers] = useState<{[key: number]: number}>({}); // Index soal -> Index jawaban
+  const [selectedAnswers, setSelectedAnswers] = useState<{[key: number]: number}>({});
 
   // 1. Generate Soal via Gemini saat halaman dibuka
   useEffect(() => {
@@ -28,8 +28,7 @@ export default function QuizScreen() {
   const generateQuiz = async (museumName: string) => {
     setLoading(true);
     try {
-      // Prompt Engineering: Minta output JSON bersih
-      const prompt = `Buatkan 3 soal pilihan ganda tentang "${museumName}" dalam bahasa Indonesia. 
+      const prompt = `Buatkan 2 soal pilihan ganda tentang "${museumName}" dalam bahasa Indonesia. 
       Format output HARUS JSON murni tanpa markdown, array of objects dengan struktur:
       [
         {
@@ -61,7 +60,7 @@ export default function QuizScreen() {
     } catch (error) {
       console.error("Error Gemini:", error);
       Alert.alert("Gagal", "Gagal memuat soal dari AI. Menggunakan soal cadangan.");
-      // Fallback ke data dummy jika API error/habis kuota
+      // Fallback ke data dummy
       setQuestions([
         {
             question: "Apa nama lain dari Museum Sejarah Jakarta?",
@@ -97,7 +96,14 @@ export default function QuizScreen() {
     Alert.alert(
         "Hasil Kuis",
         `Kamu menjawab benar ${correctCount} dari ${questions.length} soal!\nTotal Poin Tambahan: ${score}`,
-        [{ text: "Selesai", onPress: () => router.navigate('/(main)/(homepage)') }]
+        [
+            { 
+                text: "Selesai", 
+                // UPDATE NAVIGASI: Balik ke halaman awal jelajah museum (List Museum)
+                // Menggunakan 'popToTop' atau navigate ke root tab jelajah
+                onPress: () => router.navigate('/(main)/(jelajah-museum)')
+            }
+        ]
     );
   };
 
@@ -107,9 +113,18 @@ export default function QuizScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#5D4037" />
 
+      {/* Header Coklat */}
+      <SafeAreaView edges={['top']} style={styles.header}>
+        <View style={styles.headerContent}>
+          <Image source={{ uri: 'https://i.pravatar.cc/100' }} style={styles.avatar} />
+          <Text style={styles.headerTitle}>MuseumKu</Text>
+          <TouchableOpacity><Ionicons name="ellipsis-vertical" size={24} color="#FFF" /></TouchableOpacity>
+        </View>
+      </SafeAreaView>
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
-        {/* Navigasi Back */}
+        {/* Navigasi Back Manual */}
         <TouchableOpacity onPress={() => router.back()} style={styles.backRow}>
             <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
