@@ -138,12 +138,6 @@ export default function TabLayout() {
           ),
         }}
       />
-
-      {/* HIDE PROFILE (Supaya gak muncul jadi tab ke-5) */}
-      <Tabs.Screen
-        name="(profile)/index"
-        options={{ href: null }}
-      />
     </Tabs>
   );
 }

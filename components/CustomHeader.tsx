@@ -21,12 +21,12 @@ export default function CustomHeader() {
   };
 
   const handleToProfile = () => {
-    setMenuVisible(false); // Tutup menu dulu
+    setMenuVisible(false);
     
     // Arahkan ke file profile kamu.
     // Berdasarkan gambar: app/(main)/(homepage)/profile/index.tsx
     // Maka rutenya adalah:
-    router.push('/(main)/(profile)'); 
+    router.push('/profile'); 
   };
 
   return (
