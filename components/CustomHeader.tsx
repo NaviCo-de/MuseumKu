@@ -1,10 +1,9 @@
-// components/CustomHeader.tsx
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
-import { auth } from '../firebaseConfig';
-import { Colors } from '../constants/Colors';
+import { auth } from '@/firebaseConfig';
+import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 
 export default function CustomHeader() {
@@ -22,29 +21,29 @@ export default function CustomHeader() {
 
   const handleToProfile = () => {
     setMenuVisible(false);
-    
-    // Arahkan ke file profile kamu.
-    // Berdasarkan gambar: app/(main)/(homepage)/profile/index.tsx
-    // Maka rutenya adalah:
     router.push('/profile'); 
   };
 
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
       <View style={styles.headerContainer}>
-        {/* Kiri: Foto Profil */}
-        <Image 
-          source={{ uri: 'https://i.pravatar.cc/100' }} 
-          style={styles.profileImage} 
-        />
+        {/* Kiri: Foto Profil (Dibungkus View fixed width agar seimbang) */}
+        <View style={styles.sideContainerLeft}>
+          <Image 
+            source={{ uri: 'https://i.pravatar.cc/100' }} 
+            style={styles.profileImage} 
+          />
+        </View>
         
-        {/* Tengah: Logo */}
+        {/* Tengah: Logo (Flex 1 agar mengisi ruang & rata tengah absolut) */}
         <Text style={styles.headerTitle}>MuseumKu</Text>
         
-        {/* Kanan: Tombol Menu */}
-        <TouchableOpacity onPress={() => setMenuVisible(true)}>
-          <Text style={styles.menuIcon}>⋮</Text> 
-        </TouchableOpacity>
+        {/* Kanan: Tombol Menu (Dibungkus View fixed width sama dengan kiri) */}
+        <View style={styles.sideContainerRight}>
+          <TouchableOpacity onPress={() => setMenuVisible(true)}>
+            <Text style={styles.menuIcon}>⋮</Text> 
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* MODAL MENU */}
@@ -80,7 +79,7 @@ export default function CustomHeader() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: Colors.cokelatMuda.base, // Warna background Header
+    backgroundColor: Colors.cokelatMuda.base,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -90,23 +89,34 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
     paddingTop: 10,
   },
+  // Container Kiri & Kanan harus punya width sama biar tengahnya presisi
+  sideContainerLeft: {
+    width: 40, 
+    alignItems: 'flex-start',
+  },
+  sideContainerRight: {
+    width: 40, 
+    alignItems: 'flex-end',
+  },
   profileImage: {
     width: 40, 
     height: 40, 
     borderRadius: 20,
   },
   headerTitle: {
-    fontSize: 20, 
+    fontSize: 30, // UPDATE: Font size jadi 30
     fontWeight: 'bold', 
     color: '#fff', 
-    fontFamily: 'serif'
+    fontFamily: 'serif',
+    flex: 1, // UPDATE: Mengisi ruang kosong
+    textAlign: 'center', // UPDATE: Memastikan teks di tengah container
   },
   menuIcon: {
     fontSize: 24, 
     color: '#fff', 
     fontWeight: 'bold'
   },
-  // Style Modal (Sama seperti sebelumnya)
+  // Style Modal
   modalOverlay: {
     flex: 1, 
     backgroundColor: 'rgba(0,0,0,0.3)'
