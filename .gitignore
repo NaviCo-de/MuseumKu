@@ -42,3 +42,11 @@ app-example
 /ios
 /android
 
+# ... yang lain ...
+
+# Env
+.env
+.env.local
+.env.development
+.env.test
+.env.production
