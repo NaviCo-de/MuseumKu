@@ -67,6 +67,12 @@ export default function PaymentScreen() {
     router.replace(`/(main)/(jelajah-museum)/${id}/journey`);
   };
 
+  // Handler untuk tombol "Nanti Saja" - kembali ke halaman detail museum
+  const handleLater = () => {
+    setShowSuccessModal(false);
+    router.back(); // Kembali ke halaman index (detail museum)
+  };
+
   if (!museum) return null;
 
   return (
@@ -205,7 +211,8 @@ export default function PaymentScreen() {
               <Text style={styles.primaryButtonText}>Mulai Sekarang</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.secondaryButtonModal} onPress={() => setShowSuccessModal(false)}>
+            {/* Tombol "Nanti Saja" kembali ke halaman detail */}
+            <TouchableOpacity style={styles.secondaryButtonModal} onPress={handleLater}>
               <Text style={styles.secondaryButtonText}>Nanti Saja</Text>
             </TouchableOpacity>
           </View>
@@ -222,7 +229,7 @@ const styles = StyleSheet.create({
   // Header
   header: { 
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', 
-    paddingHorizontal: 20, paddingTop: 50, paddingBottom: 20 
+    paddingHorizontal: 20, paddingTop: 30, paddingBottom: 20 
   },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#000' },
   backButton: { padding: 5 },

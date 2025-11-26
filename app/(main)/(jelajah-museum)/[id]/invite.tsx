@@ -7,54 +7,52 @@ import {
   TextInput, 
   ScrollView, 
   StatusBar,
-  Alert
+  Modal
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-// Dummy Data (Sesuai screenshot kebanyakan shandy_darrell)
+// Dummy Data
 const DUMMY_CLOSE_FRIENDS = [
-  { id: '1', name: 'shandy_darrell' },
-  { id: '2', name: 'shandy_darrell' },
-  { id: '3', name: 'shandy_darrell' },
+  { id: '1', name: 'ari_darrell' },
+  { id: '2', name: 'rahel.meilinda' },
+  { id: '3', name: 'aldo_fahrezy' },
 ];
 
 const DUMMY_ALL_FRIENDS = [
-  { id: '4', name: 'shandy_darrell' },
-  { id: '5', name: 'shandy_darrell' },
-  { id: '6', name: 'shandy_darrell' },
-  { id: '7', name: 'shandy_darrell' },
-  { id: '8', name: 'shandy_darrell' },
-  { id: '9', name: 'shandy_darrell' },
+  { id: '4', name: 'kayla.kirana' },
+  { id: '5', name: 'bima_wijaya' },
+  { id: '6', name: 'nara.satria' },
+  { id: '7', name: 'intan_putrii' },
+  { id: '8', name: 'fajar.ramadhan' },
+  { id: '9', name: 'lila_anggita' },
 ];
 
 export default function InviteFriendsScreen() {
   const router = useRouter();
-  useLocalSearchParams(); // ID Museum jika nanti diperlukan
+  useLocalSearchParams(); 
   const [searchQuery, setSearchQuery] = useState('');
   
-  // State untuk menyimpan ID teman yang sudah diajak
+  // State undangan
   const [invitedIds, setInvitedIds] = useState<string[]>([]);
+  
+  // State Modal
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Fungsi Handle Invite
   const handleInvite = (friendId: string) => {
-    if (invitedIds.includes(friendId)) {
-      // Kalau mau bisa cancel invite, aktifkan baris ini:
-      // setInvitedIds(prev => prev.filter(id => id !== friendId));
-    } else {
+    if (!invitedIds.includes(friendId)) {
       setInvitedIds(prev => [...prev, friendId]);
-      Alert.alert("Berhasil", "Undangan telah dikirim!");
+      // Tampilkan Modal Custom (Ganti Alert)
+      setShowSuccessModal(true);
     }
   };
 
-  // Fungsi Render Item Teman
   const renderFriendItem = (item: { id: string, name: string }) => {
     const isInvited = invitedIds.includes(item.id);
 
     return (
       <View key={item.id} style={styles.friendCard}>
         <View style={styles.friendInfo}>
-          {/* Avatar Bulat Abu-abu */}
           <View style={styles.avatarPlaceholder} />
           <Text style={styles.friendName}>{item.name}</Text>
         </View>
@@ -72,7 +70,6 @@ export default function InviteFriendsScreen() {
     );
   };
 
-  // Filter Logic (Untuk Search)
   const filteredClose = DUMMY_CLOSE_FRIENDS.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
   const filteredAll = DUMMY_ALL_FRIENDS.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -80,13 +77,11 @@ export default function InviteFriendsScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       
-      {/* Konten Scrollable */}
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Header Halaman */}
         <View style={styles.headerSection}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={28} color="#000" />
@@ -98,7 +93,6 @@ export default function InviteFriendsScreen() {
           </View>
         </View>
 
-        {/* Search Bar */}
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={24} color="#5D4037" style={styles.searchIcon} />
           <TextInput 
@@ -110,139 +104,107 @@ export default function InviteFriendsScreen() {
           />
         </View>
 
-        {/* Section: Teman Dekat */}
         <Text style={styles.sectionTitle}>Teman Dekat</Text>
         <View style={styles.listContainer}>
           {filteredClose.map(renderFriendItem)}
         </View>
 
-        {/* Section: Semua Teman */}
         <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Semua Teman</Text>
         <View style={styles.listContainer}>
           {filteredAll.map(renderFriendItem)}
         </View>
 
-        {/* Padding bawah agar tidak ketutup nav bar */}
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* MODAL SUKSES INVITE */}
+      <Modal visible={showSuccessModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalHeader}>Berhasil!</Text>
+            <Text style={styles.modalDesc}>
+              Undangan telah dikirim ke teman Anda.
+            </Text>
+            
+            <TouchableOpacity 
+                style={styles.primaryButtonModal} 
+                onPress={() => setShowSuccessModal(false)}
+            >
+              <Text style={styles.primaryButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FCFBFA', // Background agak krem/putih
-  },
-  scrollContent: {
-    padding: 20,
-    paddingTop: 20, // Jarak dari atas
-  },
+  container: { flex: 1, backgroundColor: '#FCFBFA' },
+  scrollContent: { padding: 20, paddingTop: 20 },
   
-  // HEADER
-  headerSection: {
-    alignItems: 'center', // Rata tengah
-    marginBottom: 20,
-    position: 'relative',
-  },
-  backButton: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    zIndex: 10,
-  },
-  titleContainer: {
-    alignItems: 'center',
-    marginTop: 10, // Memberi ruang agar sejajar dengan back button secara visual
-  },
-  pageTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 5,
-  },
-  pageSubtitle: {
-    fontSize: 14,
-    color: '#444',
-  },
+  headerSection: { alignItems: 'center', marginBottom: 20, position: 'relative' },
+  backButton: { position: 'absolute', left: 0, top: 0, zIndex: 10 },
+  titleContainer: { alignItems: 'center', marginTop: 10 },
+  pageTitle: { fontSize: 22, fontWeight: 'bold', color: '#000', marginBottom: 5 },
+  pageSubtitle: { fontSize: 14, color: '#444' },
 
-  // SEARCH BAR
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderWidth: 1.5,
-    borderColor: '#5D4037', // Border Coklat
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    height: 45,
-    marginBottom: 25,
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: '#000',
-    height: '100%',
-  },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', borderWidth: 1.5, borderColor: '#5D4037', borderRadius: 25, paddingHorizontal: 15, height: 45, marginBottom: 25 },
+  searchIcon: { marginRight: 10 },
+  searchInput: { flex: 1, fontSize: 14, color: '#000', height: '100%' },
 
-  // LIST & ITEMS
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 10,
+  sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#000', marginBottom: 10 },
+  listContainer: { gap: 10 },
+  
+  friendCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFF', padding: 10, paddingHorizontal: 15, borderRadius: 30, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, borderWidth: 1, borderColor: '#EEE' },
+  friendInfo: { flexDirection: 'row', alignItems: 'center' },
+  avatarPlaceholder: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#E0E0E0', marginRight: 12 },
+  friendName: { fontSize: 14, color: '#000', fontWeight: '400' },
+  
+  inviteButton: { backgroundColor: '#5D4037', paddingVertical: 6, paddingHorizontal: 20, borderRadius: 20 },
+  invitedButton: { backgroundColor: '#A1887F' },
+  inviteButtonText: { color: '#FFF', fontSize: 12, fontWeight: 'bold' },
+
+  // --- MODAL STYLES (SAMA SEPERTI PAGE LAIN) ---
+  modalOverlay: { 
+    flex: 1, 
+    backgroundColor: 'rgba(0,0,0,0.6)', 
+    justifyContent: 'center', 
+    alignItems: 'center' 
   },
-  listContainer: {
-    gap: 10,
+  modalCard: { 
+    width: '80%', 
+    backgroundColor: '#FFF', 
+    borderRadius: 24, 
+    padding: 25, 
+    alignItems: 'center', 
+    elevation: 10 
   },
-  friendCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFF',
-    padding: 10,
-    paddingHorizontal: 15,
-    borderRadius: 30, // Rounded Pill Shape
-    // Shadow
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    borderWidth: 1,
-    borderColor: '#EEE',
+  modalHeader: { 
+    fontSize: 22, 
+    fontWeight: 'bold', 
+    textAlign: 'center', 
+    color: '#000', 
+    marginBottom: 10 
   },
-  friendInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  modalDesc: { 
+    fontSize: 14, 
+    textAlign: 'center', 
+    color: '#000', 
+    marginBottom: 25, 
+    lineHeight: 20 
   },
-  avatarPlaceholder: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#E0E0E0', // Lingkaran abu-abu
-    marginRight: 12,
+  primaryButtonModal: { 
+    backgroundColor: '#4E342E', 
+    width: '100%', 
+    paddingVertical: 14, 
+    borderRadius: 16, // Radius 16 sesuai request
+    alignItems: 'center'
   },
-  friendName: {
-    fontSize: 14,
-    color: '#000',
-    fontWeight: '400',
-  },
-  inviteButton: {
-    backgroundColor: '#5D4037', // Coklat Tua
-    paddingVertical: 6,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  invitedButton: {
-    backgroundColor: '#A1887F', // Coklat lebih muda jika sudah diajak
-  },
-  inviteButtonText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
+  primaryButtonText: { 
+    color: '#FFF', 
+    fontWeight: 'bold', 
+    fontSize: 16 
+  }
 });
