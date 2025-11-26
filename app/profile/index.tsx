@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, ScrollView, ActivityIndicator } from 'react-native';
-import { db, auth } from '../../firebaseConfig'; 
+import { db, auth } from '@/firebaseConfig'; // Pastikan path ../ benar
 // 1. Pastikan import ini lengkap
 import { collection, query, where, onSnapshot, doc, getDoc, orderBy } from 'firebase/firestore';
-import { Colors } from '../../constants/Colors';
+import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
