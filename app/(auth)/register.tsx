@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Alert, Text } from 'react-native';
+import { Colors } from '@/constants/Colors';
+import { UserProfile } from '@/types/users';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { db, auth } from '../../firebaseConfig';
-import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/Colors';
-import { Ionicons } from '@expo/vector-icons';
-import { UserProfile } from '@/types/users';
+import React, { useState } from 'react';
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { auth, db } from '../../firebaseConfig.js';
 
 export default function RegisterScreen() {
     const router = useRouter();
