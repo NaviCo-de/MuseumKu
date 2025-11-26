@@ -1,24 +1,38 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, TouchableOpacity, Button } from 'react-native';
-import { collection, getDocs, orderBy, query, onSnapshot } from 'firebase/firestore';
-import { db } from '../../../firebaseConfig';
+import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+// 1. Tambahkan doc dan getDoc untuk ambil data user spesifik
+import { collection, query, orderBy, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { db, auth } from '../../../firebaseConfig'; // Pastikan auth diimport
 import { Colors } from '../../../constants/Colors';
-import { Ionicons } from '@expo/vector-icons'; // Icon Love, Comment, Share
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { seedDatabase } from '@/utils/seeder';
 
 export default function Homepage() {
   const insets = useSafeAreaInsets();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // 2. State untuk menyimpan nama user
+  const [username, setUsername] = useState('');
 
-  // Fetch Data saat layar dibuka
   useEffect(() => {
-      // 1. Buat Query
-      const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+      // A. Ambil Data User yang sedang Login (Untuk Header "Hi, Aldo!")
+      const fetchUserData = async () => {
+        if (auth.currentUser) {
+          try {
+            const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+            if (userDoc.exists()) {
+              setUsername(userDoc.data().username);
+            }
+          } catch (e) {
+            console.error("Gagal ambil nama user", e);
+          }
+        }
+      };
+      fetchUserData();
 
-      // 2. Pasang "CCTV" (Realtime Listener)
-      // onSnapshot akan jalan PERTAMA KALI, dan SETIAP KALI ada perubahan di database
+      // B. Ambil Postingan (Logika lama Anda)
+      const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const data = snapshot.docs.map(doc => ({
           id: doc.id,
@@ -26,50 +40,54 @@ export default function Homepage() {
         }));
         
         setPosts(data);
-        setLoading(false); // Matikan loading setelah data pertama didapat
+        setLoading(false);
       }, (error) => {
         console.error("Error fetching posts:", error);
         setLoading(false);
       });
 
-      // 3. Cabut CCTV saat halaman dihancurkan (Cleanup function)
       return () => unsubscribe();
   }, []);
 
-  // Komponen Kartu Postingan (Sesuai Desain)
+  // 3. Komponen Header (Lokomotif) - Sesuai Gambar Referensi
+  const renderHeader = () => (
+    <View style={styles.welcomeContainer}>
+      <Text style={styles.welcomeTitle}>Hi, {username || "Penjelajah"}!</Text>
+      <Text style={styles.welcomeSubtitle}>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+      </Text>
+    </View>
+  );
+
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.card}>
-      {/* Header Post: Foto User, Nama, Lokasi/Tanggal */}
       <View style={styles.cardHeader}>
         <Image source={{ uri: item.userPhoto }} style={styles.avatar} />
         <View>
           <Text style={styles.username}>{item.username}</Text>
           <Text style={styles.subInfo}>
-             {item.location} • {new Date(item.createdAt.seconds * 1000).toLocaleDateString()}
+             {item.location} • {item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleDateString() : "Baru saja"}
           </Text>
         </View>
       </View>
 
-      {/* Gambar Postingan */}
       <Image source={{ uri: item.imageURL }} style={styles.postImage} resizeMode="cover" />
 
-      {/* Caption */}
       <View style={styles.cardBody}>
         <Text style={styles.caption} numberOfLines={3}>
           {item.caption}
         </Text>
       </View>
 
-      {/* Action Buttons (Like, Comment, Share) */}
       <View style={styles.cardFooter}>
         <TouchableOpacity style={styles.actionBtn}>
           <Ionicons name="heart-outline" size={24} color="black" />
-          <Text style={styles.actionText}>{item.likes}</Text>
+          <Text style={styles.actionText}>{item.likes || 0}</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.actionBtn}>
           <Ionicons name="chatbubble-outline" size={22} color="black" />
-          <Text style={styles.actionText}>{item.comments}</Text>
+          <Text style={styles.actionText}>{item.comments || 0}</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.actionBtn}>
@@ -80,7 +98,8 @@ export default function Homepage() {
   );
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container]}>
+      
       {loading ? (
         <ActivityIndicator size="large" color={Colors.cokelatTua.base} style={{marginTop: 50}}/>
       ) : (
@@ -88,6 +107,7 @@ export default function Homepage() {
           data={posts}
           renderItem={renderItem}
           keyExtractor={item => item.id}
+          ListHeaderComponent={renderHeader} 
           contentContainerStyle={{ paddingBottom: 20 }}
           showsVerticalScrollIndicator={false}
         />
@@ -99,21 +119,40 @@ export default function Homepage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5', // Background abu muda biar kartu menonjol
+    backgroundColor: '#F5F5F5', 
   },
+  // 5. Styling baru untuk bagian "Hi, Aldo!" agar sesuai gambar
+  welcomeContainer: {
+    paddingHorizontal: 20,
+    marginTop: 20, // Jarak dari header atas
+    marginBottom: 5, // Jarak ke kartu postingan pertama
+  },
+  welcomeTitle: {
+    fontSize: 20, 
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 8,
+  },
+  welcomeSubtitle: {
+    fontSize: 13,
+    color: '#444',
+    lineHeight: 20,
+    textAlign: 'left',
+  },
+  // ... Style kartu di bawah ini JANGAN DIUBAH (Sesuai permintaan)
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 15,
-    backgroundColor: Colors.cokelatTua.base, // Cokelat header
+    backgroundColor: Colors.cokelatTua.base,
     height: 60,
   },
   headerTitle: {
     color: 'white',
     fontSize: 20,
     fontWeight: 'bold',
-    fontFamily: 'serif', // Biar mirip font "MuseumKu"
+    fontFamily: 'serif',
   },
   headerAvatar: {
     width: 35,
@@ -122,7 +161,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'white'
   },
-  // Style Kartu Post
   card: {
     backgroundColor: 'white',
     marginHorizontal: 15,
@@ -171,7 +209,7 @@ const styles = StyleSheet.create({
   },
   cardFooter: {
     flexDirection: 'row',
-    justifyContent: 'flex-end', // Icon di kanan sesuai desain
+    justifyContent: 'flex-end',
     gap: 15,
     borderTopWidth: 0.5,
     borderTopColor: '#eee',
