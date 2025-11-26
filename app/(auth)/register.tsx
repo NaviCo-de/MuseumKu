@@ -49,7 +49,6 @@ export default function RegisterScreen() {
             {/* HEADER COKELAT DENGAN JUDUL */}
             <View style={styles.header}>
                  {/* Simulasi Status Bar */}
-                 <View style={{height: 20}} /> 
             </View>
 
             <View style={styles.content}>
@@ -90,7 +89,7 @@ export default function RegisterScreen() {
 // Gunakan styles yang sama dengan LoginScreen di atas
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#fff' },
-    header: { height: 60, backgroundColor: Colors.cokelatTua.base },
+    header: { height: 40, backgroundColor: Colors.cokelatTua.base },
     content: { flex: 1, padding: 30, justifyContent: 'center', marginTop: -50 }, // Naik dikit
     title: { fontSize: 28, fontWeight: 'bold', color: Colors.cokelatTua.base, marginBottom: 30, textAlign: 'center' },
     input: { borderWidth: 1, borderColor: '#333', borderRadius: 10, padding: 15, fontSize: 16, marginBottom: 15 },

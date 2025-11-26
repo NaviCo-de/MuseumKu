@@ -28,7 +28,6 @@ export default function LoginScreen() {
         <View style={styles.container}>
             {/* HEADER COKELAT */}
             <View style={styles.header}>
-                <Text style={styles.headerTime}>09:41</Text>
                 {/* Icon baterai/sinyal diabaikan dulu, fokus ke layout */}
             </View>
 
@@ -89,7 +88,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   header: {
-    height: 60, // Meniru status bar cokelat di desain
+    height: 40, // Meniru status bar cokelat di desain
     backgroundColor: Colors.cokelatTua.base, 
     justifyContent: 'center',
     paddingHorizontal: 20,
