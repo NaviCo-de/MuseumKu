@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { MUSEUMS } from '@/constants/data';
+import { useAchievements } from '@/hooks/useAchievements';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // --- KONFIGURASI ---
@@ -16,6 +17,7 @@ export default function QuizScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const museum = MUSEUMS.find(m => m.id === id);
+  const { recordQuizCompletion } = useAchievements();
 
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -121,6 +123,8 @@ export default function QuizScreen() {
             correctCount++;
         }
     });
+
+    recordQuizCompletion();
 
     Alert.alert(
         "Hasil Kuis",

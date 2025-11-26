@@ -3,6 +3,7 @@ import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-rout
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebaseConfig'; 
 import { View, ActivityIndicator } from 'react-native';
+import { AchievementProvider } from '@/hooks/useAchievements';
 import AnimatedSplashScreen from '@/components/AnimatedSplashScreen'
 
 export default function RootLayout() {
@@ -21,7 +22,7 @@ export default function RootLayout() {
       }, 10000)
     });
     return subscriber;
-  }, []);
+  }, [initializing]);
 
   // 2. Logic Redirect yang Aman
   useEffect(() => {
@@ -36,17 +37,19 @@ export default function RootLayout() {
       // User gak ada, tapi coba masuk main -> Tendang ke Login
       router.replace('/(auth)/login');
     }
-  }, [user, initializing, segments, navigationState?.key]);
+  }, [user, initializing, segments, navigationState?.key, router]);
 
   if (initializing) {
     return <AnimatedSplashScreen />;
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(main)" />
-      <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-    </Stack>
+    <AchievementProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(main)" />
+        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+      </Stack>
+    </AchievementProvider>
   );
 }

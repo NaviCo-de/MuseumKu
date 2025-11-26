@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, TouchableOpacity, Share, Alert } from 'react-native';
 // 1. Tambahkan doc dan getDoc untuk ambil data user spesifik
 import { collection, query, orderBy, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../../../firebaseConfig'; // Pastikan auth diimport
 import { Colors } from '../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAchievements } from '@/hooks/useAchievements';
 
 export default function Homepage() {
   const insets = useSafeAreaInsets();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const { recordShare } = useAchievements();
   // 2. State untuk menyimpan nama user
   const [username, setUsername] = useState('');
 
@@ -49,6 +50,19 @@ export default function Homepage() {
       return () => unsubscribe();
   }, []);
 
+  // Komponen Kartu Postingan (Sesuai Desain)
+  const handleShare = async (item: any) => {
+    try {
+      const result = await Share.share({
+        message: `${item.caption}\nLokasi: ${item.location}`,
+      });
+      if (result.action === Share.sharedAction) {
+        recordShare();
+      }
+    } catch {
+      Alert.alert('Gagal membagikan', 'Coba lagi beberapa saat lagi.');
+    }
+  };
   // 3. Komponen Header (Lokomotif) - Sesuai Gambar Referensi
   const renderHeader = () => (
     <View style={styles.welcomeContainer}>
@@ -90,7 +104,7 @@ export default function Homepage() {
           <Text style={styles.actionText}>{item.comments || 0}</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.actionBtn}>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => handleShare(item)}>
           <Ionicons name="share-social-outline" size={22} color="black" />
         </TouchableOpacity>
       </View>

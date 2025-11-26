@@ -13,6 +13,7 @@ import { useLocalSearchParams, useRouter, useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors'; 
 import { MUSEUMS } from '@/constants/data';
+import { useAchievements } from '@/hooks/useAchievements';
 import QRCode from 'react-native-qrcode-svg';
 import Animated, { 
   useSharedValue, 
@@ -40,6 +41,7 @@ export default function JourneyScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const museum = MUSEUMS.find(m => m.id === id);
+  const { recordVisit } = useAchievements();
 
   // --- STATE ---
   const [currentStep, setCurrentStep] = useState(0); 
@@ -104,6 +106,9 @@ export default function JourneyScreen() {
   };
 
   const handleFinishJourney = () => {
+    if (typeof id === 'string') {
+      recordVisit(id);
+    }
     router.replace(`/(main)/(jelajah-museum)/${id}/completion`);
   };
 

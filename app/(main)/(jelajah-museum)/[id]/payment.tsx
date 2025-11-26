@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  Image, 
-  TouchableOpacity, 
+import { MUSEUMS } from '@/constants/data';
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
   ActivityIndicator,
+  Image,
+  Modal,
   Platform,
   ScrollView,
-  Modal
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { useLocalSearchParams, useRouter, useNavigation } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { MUSEUMS } from '@/constants/data'; 
 
 export default function PaymentScreen() {
   const { id } = useLocalSearchParams();
