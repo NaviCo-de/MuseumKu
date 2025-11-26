@@ -6,7 +6,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { auth, db } from '../../firebaseConfig.js';
+import { auth, db } from '@/firebaseConfig.js';
 
 export default function RegisterScreen() {
     const router = useRouter();

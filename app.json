@@ -7,9 +7,10 @@
     "icon": "./assets/images/icon.png",
     "scheme": "museumku",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,  // UBAH JADI FALSE (Demi kestabilan)
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.navico.museumku"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,6 +19,7 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "package": "com.navico.museumku",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -42,7 +44,13 @@
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true
+      "reactCompiler": false  // UBAH JADI FALSE (Ini biang kerok error aneh)
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "61c1cda6-d046-4a81-82da-3591dede317e"
+      }
     }
   }
 }
