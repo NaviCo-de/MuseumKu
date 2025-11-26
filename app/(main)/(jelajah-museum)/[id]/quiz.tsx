@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, StatusBar, Modal } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { MUSEUMS } from '@/constants/data';
@@ -8,9 +8,6 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // --- KONFIGURASI ---
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-
-// GANTI JADI MODEL 'FLASH' (Versi Ringan & Gratis)
-// Kalau 'gemini-2.0-flash' belum jalan di regionmu, ganti ke 'gemini-1.5-flash'
 const GEMINI_MODEL_NAME = "gemini-2.0-flash"; 
 
 export default function QuizScreen() {
@@ -22,6 +19,10 @@ export default function QuizScreen() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAnswers, setSelectedAnswers] = useState<{[key: number]: number}>({});
+
+  // State untuk Modal Hasil
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [quizResult, setQuizResult] = useState({ correct: 0, total: 0, score: 0 });
 
   const setFallbackQuestions = useCallback(() => {
     setQuestions([
@@ -53,50 +54,27 @@ export default function QuizScreen() {
 
     setLoading(true);
     try {
-      // 1. Inisialisasi SDK
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      
-      // 2. Konfigurasi Model
       const model = genAI.getGenerativeModel({ 
         model: GEMINI_MODEL_NAME,
-        generationConfig: {
-            responseMimeType: "application/json", 
-        }
+        generationConfig: { responseMimeType: "application/json" }
       });
 
-      // 3. Prompt (Perintah)
       const prompt = `Buatkan 3 soal pilihan ganda tentang "${museumName}" dalam bahasa Indonesia.
-      
       Format JSON array murni:
-      [
-        {
-          "question": "Pertanyaan...",
-          "options": ["Pilihan A", "Pilihan B", "Pilihan C", "Pilihan D"],
-          "correctIndex": 0 
-        }
-      ]
-      Pastikan correctIndex adalah angka 0-3.`;
+      [ { "question": "...", "options": ["Pilihan A", "Pilihan B", "Pilihan C", "Pilihan D"], "correctIndex": 0 } ]`;
 
-      // 4. Generate Content
       const result = await model.generateContent(prompt);
-      const response = result.response;
-      const text = response.text(); 
-
+      const text = result.response.text(); 
       console.log("Gemini Flash Response:", text);
-
-      // 5. Parse JSON
-      const parsedQuestions = JSON.parse(text);
-      setQuestions(parsedQuestions);
+      
+      setQuestions(JSON.parse(text));
 
     } catch (error: any) {
       console.error("Error SDK Gemini:", error);
-      
-      // Deteksi jika masih kena limit
       if (error.message?.includes("429") || error.message?.includes("quota")) {
-         Alert.alert("Limit Tercapai", "Sedang menggunakan soal cadangan karena limit API habis.");
+         // Silent fallback or specific handling
       }
-      
-      // Fallback ke soal dummy
       setFallbackQuestions(); 
     } finally {
       setLoading(false);
@@ -125,16 +103,9 @@ export default function QuizScreen() {
 
     recordQuizCompletion();
 
-    Alert.alert(
-        "Hasil Kuis",
-        `Kamu menjawab benar ${correctCount} dari ${questions.length} soal!\nTotal Poin Tambahan: ${score}`,
-        [
-            { 
-                text: "Selesai", 
-                onPress: () => router.navigate('/(main)/(jelajah-museum)')
-            }
-        ]
-    );
+    // GANTI ALERT DENGAN SET STATE MODAL
+    setQuizResult({ correct: correctCount, total: questions.length, score });
+    setShowResultModal(true);
   };
 
   if (!museum) return null;
@@ -195,8 +166,31 @@ export default function QuizScreen() {
                 </TouchableOpacity>
             </>
         )}
-
       </ScrollView>
+
+      {/* MODAL HASIL KUIS */}
+      <Modal visible={showResultModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalHeader}>Hasil Kuis</Text>
+            <Text style={styles.modalDesc}>
+              Kamu menjawab benar <Text style={{fontWeight:'bold'}}>{quizResult.correct}</Text> dari <Text style={{fontWeight:'bold'}}>{quizResult.total}</Text> soal!{'\n'}
+              Total Poin Tambahan: <Text style={{fontWeight:'bold', color: '#5D4037'}}>{quizResult.score}</Text>
+            </Text>
+            
+            <TouchableOpacity 
+                style={styles.primaryButtonModal} 
+                onPress={() => {
+                    setShowResultModal(false);
+                    router.navigate('/(main)/(jelajah-museum)');
+                }}
+            >
+              <Text style={styles.primaryButtonText}>Selesai</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 }
@@ -237,5 +231,20 @@ const styles = StyleSheet.create({
     width: '60%',
     alignSelf: 'center'
   },
-  submitText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 }
+  submitText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
+
+  // --- MODAL STYLES (SAMA SEPERTI PAYMENT) ---
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
+  modalCard: { width: '80%', backgroundColor: '#FFF', borderRadius: 24, padding: 25, alignItems: 'center', elevation: 10 },
+  modalHeader: { fontSize: 22, fontWeight: 'bold', textAlign: 'center', color: '#000', marginBottom: 10 },
+  modalDesc: { fontSize: 14, textAlign: 'center', color: '#000', marginBottom: 25, lineHeight: 20 },
+  
+  primaryButtonModal: { 
+    backgroundColor: '#4E342E', 
+    width: '100%', 
+    paddingVertical: 14, 
+    borderRadius: 16, // Radius 16
+    alignItems: 'center'
+  },
+  primaryButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 }
 });
