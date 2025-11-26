@@ -36,16 +36,7 @@ export default function AddFriendScreen() {
           .filter(u => u.id !== myUid); 
        
        setAllUsers(usersList);
-       
-       if (searchQuery) {
-         const lowerText = searchQuery.toLowerCase();
-         const filtered = usersList.filter(user => 
-           (user.username && user.username.toLowerCase().includes(lowerText))
-         );
-         setFilteredUsers(filtered);
-       } else {
-         setFilteredUsers(usersList);
-       }
+       setFilteredUsers(usersList);
        setLoading(false);
     });
 
@@ -61,17 +52,20 @@ export default function AddFriendScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredUsers(allUsers);
+      return;
+    }
+    const lowerText = searchQuery.toLowerCase();
+    const filtered = allUsers.filter(user => 
+      (user.username && user.username.toLowerCase().includes(lowerText))
+    );
+    setFilteredUsers(filtered);
+  }, [searchQuery, allUsers]);
+
   const handleSearch = (text: string) => {
     setSearchQuery(text);
-    if (text.trim() === '') {
-      setFilteredUsers(allUsers);
-    } else {
-      const lowerText = text.toLowerCase();
-      const filtered = allUsers.filter(user => 
-        (user.username && user.username.toLowerCase().includes(lowerText))
-      );
-      setFilteredUsers(filtered);
-    }
   };
 
   // 2. LOGIC ADD FRIEND YANG BENAR (TIMBAL BALIK)

@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   Alert,
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,152 +13,105 @@ import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { useAchievements } from '@/hooks/useAchievements';
 
-type FilterKey = 'semua' | 'aktif' | 'selesai';
-
-type AchievementItem = ReturnType<typeof useAchievements>['achievements'][number];
-
 export default function AchievementScreen() {
   const router = useRouter();
-  const {
-    achievements,
-    completedCount,
-    points,
-    stats,
-    hasCheckedInToday,
-    claimAchievement,
-    recordDailyCheckIn,
-  } = useAchievements();
-  const [filter, setFilter] = useState<FilterKey>('semua');
+  const { achievements, loading, claimAchievement, points } = useAchievements();
 
-  const filteredAchievements = useMemo(() => {
-    return achievements.filter(item => {
-      const isDone = item.isComplete || item.isClaimed;
-      if (filter === 'aktif') return !isDone;
-      if (filter === 'selesai') return isDone;
-      return true;
-    });
-  }, [achievements, filter]);
+  const orderedAchievements = useMemo(() => {
+    const order = [
+      'culture-digger',
+      'museum-point-guard',
+      'explorer',
+      'a-student',
+      'partner',
+    ];
+    const map = new Map(achievements.map(item => [item.id, item]));
+    const ordered = order.map(id => map.get(id)).filter(Boolean);
+    // Fallback: append any achievement not in the predefined order so nothing is hidden
+    const remaining = achievements.filter(item => !order.includes(item.id));
+    return [...ordered, ...remaining];
+  }, [achievements]);
 
-  const handleClaim = (achievement: AchievementItem) => {
+  const getMedalTier = (pct: number) => {
+    if (pct >= 1) return 2; // Gold
+    if (pct >= 0.66) return 1; // Silver
+    if (pct >= 0.33) return 0; // Bronze
+    return -1; // None yet
+  };
+
+  const getRewardLabel = (achievement: ReturnType<typeof useAchievements>['achievements'][number]) => {
+    if (achievement.rewardPoints && achievement.rewardPoints > 0) {
+      return `+${achievement.rewardPoints} poin`;
+    }
+    return 'Medali';
+  };
+
+  const handleClaim = (achievement: ReturnType<typeof useAchievements>['achievements'][number]) => {
     const result = claimAchievement(achievement.id);
     if (!result.success) {
-      const message =
+      Alert.alert(
+        'Tidak bisa klaim',
         result.reason === 'Belum selesai'
-          ? 'Selesaikan pencapaian ini dulu sebelum klaim hadiah.'
-          : result.reason === 'Sudah diklaim'
-          ? 'Reward sudah kamu dapatkan.'
-          : 'Achievement tidak ditemukan.';
-      Alert.alert('Tidak bisa klaim', message);
+          ? 'Selesaikan misi dulu sebelum klaim hadiah.'
+          : 'Reward sudah diambil.'
+      );
       return;
     }
 
-    const rewardText =
-      achievement.rewardPoints && achievement.rewardPoints > 0
-        ? `Reward ${achievement.reward} berhasil ditambahkan.`
-        : 'Reward berhasil ditambahkan.';
+    const rewardText = achievement.rewardPoints && achievement.rewardPoints > 0
+      ? `+${achievement.rewardPoints} poin berhasil ditambahkan.`
+      : 'Hadiah berhasil ditambahkan.';
     Alert.alert('Hadiah diklaim', rewardText);
   };
 
-  const renderFilter = (key: FilterKey, label: string) => {
-    const active = filter === key;
-    return (
-      <TouchableOpacity
-        key={key}
-        style={[
-          styles.filterChip,
-          active && { backgroundColor: Colors.cokelatTua.base },
-        ]}
-        onPress={() => setFilter(key)}
-      >
-        <Text
-          style={[
-            styles.filterText,
-            active && { color: '#FFF', fontWeight: '700' },
-          ]}
-        >
-          {label}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
-
-  const handleDailyCheckIn = () => {
-    const updated = recordDailyCheckIn();
-    if (updated) {
-      Alert.alert('Check-in tersimpan', 'Streak kamu sudah diperbarui.');
-    } else {
-      Alert.alert('Check-in sudah dilakukan', 'Kamu sudah check-in hari ini.');
-    }
-  };
-
-  const renderAchievement = (achievement: AchievementItem) => {
-    const isClaimed = achievement.isClaimed;
-    const isComplete = achievement.isComplete;
+  const renderMission = (achievement: ReturnType<typeof useAchievements>['achievements'][number]) => {
     const progressPct = Math.min(achievement.progress / achievement.target, 1);
-
-    const buttonLabel = isClaimed
+    const completed = achievement.isComplete || achievement.isClaimed;
+    const medalTier = getMedalTier(progressPct);
+    const medalColors = ['#CD7F32', '#C0C0C0', '#D4AF37']; // Bronze, Silver, Gold
+    const medalColor = medalTier >= 0 ? medalColors[medalTier] : Colors.neutral[60];
+    const buttonDisabled = !achievement.isComplete || achievement.isClaimed;
+    const buttonLabel = achievement.isClaimed
       ? 'Sudah diklaim'
-      : isComplete
+      : achievement.isComplete
       ? 'Klaim hadiah'
       : 'Dalam progres';
 
     return (
-      <View key={achievement.id} style={styles.card}>
-        <View style={styles.cardHeader}>
-          <View>
-            <Text style={styles.cardTitle}>{achievement.title}</Text>
-            <Text style={styles.cardSubtitle}>{achievement.description}</Text>
-          </View>
-          <View style={styles.rewardPill}>
-            <Ionicons name="star" size={14} color={Colors.cokelatTua.base} />
-            <Text style={styles.rewardText}>{achievement.reward}</Text>
+      <View key={achievement.id} style={styles.missionCard}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.missionTitle}>{achievement.title}</Text>
+          <Text style={styles.missionSubtitle}>{achievement.description}</Text>
+
+          <View style={styles.progressRow}>
+            <View style={styles.progressBarTrack}>
+              <View style={[styles.progressBarFill, { width: `${progressPct * 100}%` }]} />
+            </View>
+            <Text style={styles.progressValue}>
+              {achievement.progress}/{achievement.target}
+            </Text>
           </View>
         </View>
 
-        <View style={styles.progressRow}>
-          <View style={styles.progressBarBackground}>
-            <View
-              style={[
-                styles.progressBarFill,
-                { width: `${progressPct * 100}%` },
-              ]}
-            />
-          </View>
-          <Text style={styles.progressText}>
-            {achievement.progress}/{achievement.target}
-          </Text>
-        </View>
-
-        <View style={styles.cardFooter}>
-          <View style={styles.categoryTag}>
-            <Ionicons
-              name={
-                achievement.category === 'kuis'
-                  ? 'help-circle'
-                  : achievement.category === 'berbagi'
-                  ? 'share-social'
-                  : achievement.category === 'streak'
-                  ? 'flame'
-                  : 'map'
-              }
-              size={14}
-              color={Colors.cokelatTua.base}
-            />
-            <Text style={styles.categoryText}>{achievement.category}</Text>
-          </View>
-
+        <View style={styles.medalWrapper}>
+          <Ionicons
+            name={completed ? 'medal' : 'medal-outline'}
+            size={32}
+            color={medalColor}
+          />
+          <Text style={styles.medalLabel}>{getRewardLabel(achievement)}</Text>
           <TouchableOpacity
             style={[
               styles.claimButton,
-              (!isComplete || isClaimed) && { backgroundColor: Colors.neutral[40] },
+              buttonDisabled && styles.claimButtonDisabled,
             ]}
-            disabled={!isComplete || isClaimed}
             onPress={() => handleClaim(achievement)}
+            disabled={buttonDisabled}
           >
             <Text
               style={[
                 styles.claimText,
-                (!isComplete || isClaimed) && { color: Colors.neutral[80] },
+                buttonDisabled && styles.claimTextDisabled,
               ]}
             >
               {buttonLabel}
@@ -171,72 +125,34 @@ export default function AchievementScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingBottom: 24 }}
+      contentContainerStyle={{ paddingBottom: 32 }}
       showsVerticalScrollIndicator={false}
     >
-        <View style={styles.hero}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.heroTitle}>Pencapaianmu</Text>
-            <Text style={styles.heroSubtitle}>
-              Kumpulkan poin, buka lencana, dan lanjutkan perjalanan museum.
-          </Text>
+      <View style={styles.hero}>
+        <Text style={styles.heroTitle}>Achievements!</Text>
+        <Text style={styles.heroSubtitle}>
+          Peroleh badge untuk akunmu dengan mengerjakan misi dan mendapatkan medali!
+        </Text>
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={() => router.push('/(main)/(achievement)/medals')}
+        >
+          <Text style={styles.primaryButtonText}>Lihat Medali Saya</Text>
+        </TouchableOpacity>
+      </View>
 
-          <View style={styles.heroBadges}>
-            <View style={styles.statChip}>
-              <Ionicons name="medal" size={16} color="#FFF" />
-              <Text style={styles.statText}>{completedCount} selesai</Text>
-            </View>
-            <View style={styles.statChip}>
-              <Ionicons name="flame" size={16} color="#FFF" />
-              <Text style={styles.statText}>Streak {stats.streak} hari</Text>
-            </View>
-            <TouchableOpacity
-              style={[
-                styles.checkInButton,
-                hasCheckedInToday && styles.checkInButtonDone,
-              ]}
-              onPress={handleDailyCheckIn}
-              disabled={hasCheckedInToday}
-            >
-              <Ionicons
-                name="calendar"
-                size={14}
-                color={hasCheckedInToday ? Colors.neutral[80] : Colors.cokelatTua.base}
-              />
-              <Text
-                style={[
-                  styles.checkInText,
-                  hasCheckedInToday && { color: Colors.neutral[80] },
-                ]}
-              >
-                {hasCheckedInToday ? 'Sudah check-in hari ini' : 'Check-in harian'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Misi Saya</Text>
+        <Text style={styles.pointsText}>{points} pts</Text>
+      </View>
+
+      {loading ? (
+        <ActivityIndicator color={Colors.cokelatTua.base} style={{ marginTop: 20 }} />
+      ) : (
+        <View style={{ paddingHorizontal: 20, gap: 12 }}>
+          {orderedAchievements.map(renderMission)}
         </View>
-
-        <View style={styles.pointsBox}>
-          <Text style={styles.pointsValue}>{points}</Text>
-          <Text style={styles.pointsLabel}>Poin</Text>
-          <TouchableOpacity
-            style={styles.ctaButton}
-            onPress={() => router.push('/(main)/(jelajah-museum)')}
-          >
-            <Text style={styles.ctaText}>Mulai jelajah</Text>
-            <Ionicons name="arrow-forward" size={14} color={Colors.cokelatTua.base} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={styles.filterRow}>
-        {renderFilter('semua', 'Semua')}
-        {renderFilter('aktif', 'Sedang berjalan')}
-        {renderFilter('selesai', 'Selesai')}
-      </View>
-
-      <View style={{ paddingHorizontal: 20 }}>
-        {filteredAchievements.map(renderAchievement)}
-      </View>
+      )}
     </ScrollView>
   );
 }
@@ -247,217 +163,130 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.neutral[20],
   },
   hero: {
+    backgroundColor: '#fff',
     margin: 20,
-    padding: 18,
+    padding: 22,
     borderRadius: 18,
-    backgroundColor: Colors.cokelatMuda[30],
-    flexDirection: 'row',
-    gap: 12,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 6,
+    alignItems: 'center',
+    gap: 12,
   },
   heroTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '800',
     color: Colors.cokelatTua.base,
-    marginBottom: 6,
   },
   heroSubtitle: {
+    textAlign: 'center',
     color: Colors.neutral[90],
+    lineHeight: 20,
     fontSize: 13,
-    lineHeight: 18,
-    marginBottom: 10,
   },
-  heroBadges: {
-    flexDirection: 'row',
-    gap: 8,
-    flexWrap: 'wrap',
-  },
-  statChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  primaryButton: {
     backgroundColor: Colors.cokelatTua.base,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     borderRadius: 12,
   },
-  statText: {
-    color: '#FFF',
+  primaryButtonText: {
+    color: '#fff',
     fontWeight: '700',
-    fontSize: 12,
+    fontSize: 14,
   },
-  checkInButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: Colors.cokelatTua.base,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
+  sectionHeader: {
+    paddingHorizontal: 20,
+    marginBottom: 12,
   },
-  checkInButtonDone: {
-    borderColor: Colors.neutral[60],
-    backgroundColor: Colors.neutral[30],
-  },
-  checkInText: {
-    color: Colors.cokelatTua.base,
-    fontWeight: '700',
-    fontSize: 12,
-  },
-  pointsBox: {
-    width: 130,
-    backgroundColor: '#FFF',
-    borderRadius: 14,
-    padding: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.cokelatMuda[20],
-  },
-  pointsValue: {
-    fontSize: 28,
+  sectionTitle: {
+    fontSize: 18,
     fontWeight: '800',
     color: Colors.cokelatTua.base,
   },
-  pointsLabel: {
-    color: Colors.neutral[80],
-    fontSize: 12,
-    marginBottom: 10,
-  },
-  ctaButton: {
-    backgroundColor: Colors.neutral.base,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+  missionCard: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  ctaText: {
-    color: Colors.cokelatTua.base,
-    fontWeight: '700',
-    fontSize: 12,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    gap: 8,
-    marginBottom: 12,
-  },
-  filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.neutral[50],
-  },
-  filterText: {
-    color: Colors.neutral[90],
-    fontWeight: '600',
-    fontSize: 12,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: 14,
+    backgroundColor: '#fff',
     padding: 16,
-    marginBottom: 12,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: Colors.neutral[40],
+    gap: 14,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 6,
     elevation: 3,
+    alignItems: 'center',
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-    marginBottom: 14,
-  },
-  cardTitle: {
-    fontSize: 16,
+  missionTitle: {
+    fontSize: 15,
     fontWeight: '800',
     color: Colors.cokelatTua.base,
     marginBottom: 4,
   },
-  cardSubtitle: {
-    color: Colors.neutral[80],
+  missionSubtitle: {
+    color: Colors.neutral[90],
     fontSize: 12,
     lineHeight: 18,
-  },
-  rewardPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: Colors.neutral.base,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  rewardText: {
-    color: Colors.cokelatTua.base,
-    fontWeight: '700',
-    fontSize: 12,
+    marginBottom: 10,
   },
   progressRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginBottom: 10,
   },
-  progressBarBackground: {
+  progressBarTrack: {
     flex: 1,
     height: 10,
+    borderRadius: 10,
     backgroundColor: Colors.neutral[40],
-    borderRadius: 999,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: Colors.cokelatTua.base,
-    borderRadius: 999,
+    backgroundColor: Colors.cokelatMuda.base,
   },
-  progressText: {
+  progressValue: {
+    fontWeight: '800',
+    color: Colors.cokelatTua.base,
     fontSize: 12,
-    color: Colors.neutral[90],
-    fontWeight: '700',
   },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  medalWrapper: {
+    width: 70,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  medalLabel: {
+    fontSize: 11,
+    color: Colors.neutral[80],
+    textAlign: 'center',
+  },
+  claimButton: {
     marginTop: 4,
-  },
-  categoryTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: Colors.neutral.base,
+    backgroundColor: Colors.cokelatTua.base,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  categoryText: {
-    color: Colors.cokelatTua.base,
-    fontWeight: '700',
-    fontSize: 12,
-    textTransform: 'capitalize',
-  },
-  claimButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: Colors.cokelatMuda.base,
-    borderRadius: 10,
+  claimButtonDisabled: {
+    backgroundColor: Colors.neutral[40],
   },
   claimText: {
-    color: '#FFF',
-    fontWeight: '800',
-    fontSize: 12,
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 11,
+    textAlign: 'center',
+  },
+  claimTextDisabled: {
+    color: Colors.neutral[80],
+  },
+  pointsText: {
+    fontSize: 13,
+    color: Colors.neutral[90],
+    fontWeight: '700',
   },
 });

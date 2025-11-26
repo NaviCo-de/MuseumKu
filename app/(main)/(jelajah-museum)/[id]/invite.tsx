@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/Colors';
 
 // Dummy Data (Sesuai screenshot kebanyakan shandy_darrell)
 const DUMMY_CLOSE_FRIENDS = [
@@ -31,7 +30,7 @@ const DUMMY_ALL_FRIENDS = [
 
 export default function InviteFriendsScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams(); // ID Museum jika nanti diperlukan
+  useLocalSearchParams(); // ID Museum jika nanti diperlukan
   const [searchQuery, setSearchQuery] = useState('');
   
   // State untuk menyimpan ID teman yang sudah diajak

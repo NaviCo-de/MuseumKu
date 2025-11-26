@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { MUSEUMS } from '@/constants/data';
@@ -33,7 +33,7 @@ export default function CompletionScreen() {
 
     // Jalankan fungsi simpan saat halaman dibuka
     saveVisit();
-  }, []); // [] artinya jalan sekali pas mount
+  }, [museum]); // jalankan saat museum tersedia
 
   return (
     <View style={styles.container}>

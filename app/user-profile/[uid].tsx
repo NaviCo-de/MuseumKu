@@ -122,7 +122,7 @@ export default function OtherUserProfileScreen() {
           });
         }
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Gagal", "Terjadi kesalahan koneksi.");
     } finally {
       setFriendLoading(false);
