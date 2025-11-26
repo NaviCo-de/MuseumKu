@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Image, Dimensions } from 'react-native';
+import { View, StyleSheet, Image, Dimensions, Text } from 'react-native';
+import { useFonts } from "expo-font";
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -42,13 +43,15 @@ export default function AnimatedSplashScreen() {
 
   return (
     <View style={styles.container}>
-        
-        <Image 
-            source={require('../assets/images/logo.png')} 
-            style={styles.logo} 
-            resizeMode="contain" 
-        />
-
+      <View style={{ justifyContent: 'center', alignItems: 'center'}}>
+        <Text style={{ fontFamily: 'CrimsonText-Bold', fontSize:52, color: Colors.red[60] }}>MuseumKu</Text>
+        <Text style={{ fontWeight: 'regular', fontSize: 12, color: Colors.red[60]}}>Jelajahi Jejak Sejarah, Kenali Jari Diri</Text>
+      </View>
+      <Image 
+        source={require('../assets/images/logo.png')} 
+        style={styles.logo} 
+        resizeMode="contain"
+      />
     </View>
   );
 }
@@ -59,6 +62,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF', // Sesuaikan tema museum (Cokelat)
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 15
   },
   logoContainer: {
     width: width * 0.5,
@@ -74,7 +78,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
   },
   logo: {
-    width: '70%', 
-    height: '70%',
+    width: 151, 
+    height: 161,
   }
 });
