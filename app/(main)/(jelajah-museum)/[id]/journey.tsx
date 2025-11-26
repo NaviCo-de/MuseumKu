@@ -72,7 +72,7 @@ export default function JourneyScreen() {
       -1, // Infinite loop
       false // Do not reverse (jump jump, not jump unjump)
     );
-  }, []);
+  }, [translateY]);
 
   const animatedPinStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }]
