@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, StatusBar } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,16 +23,31 @@ export default function QuizScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedAnswers, setSelectedAnswers] = useState<{[key: number]: number}>({});
 
-  useEffect(() => {
-    if (museum) {
-      generateQuiz(museum.name);
-    }
-  }, [museum]);
+  const setFallbackQuestions = useCallback(() => {
+    setQuestions([
+        {
+            question: "Apa nama lain dari Museum Sejarah Jakarta?",
+            options: ["Museum Fatahillah", "Museum Nasional", "Museum Wayang", "Museum Bank"],
+            correctIndex: 0
+        },
+        {
+            question: "Terletak di kawasan manakah museum ini?",
+            options: ["Kota Baru", "Kota Tua", "Monas", "Ancol"],
+            correctIndex: 1
+        },
+        {
+            question: "Gedung ini dahulu digunakan sebagai apa?",
+            options: ["Kantor Pos", "Stasiun Kereta", "Balai Kota Batavia", "Gudang Rempah"],
+            correctIndex: 2
+        }
+    ]);
+    setLoading(false);
+  }, []);
 
-  const generateQuiz = async (museumName: string) => {
+  const generateQuiz = useCallback(async (museumName: string) => {
     if (!GEMINI_API_KEY) {
         console.warn("API Key hilang");
-        useFallbackQuestions();
+        setFallbackQuestions();
         return;
     }
 
@@ -82,33 +97,17 @@ export default function QuizScreen() {
       }
       
       // Fallback ke soal dummy
-      useFallbackQuestions(); 
+      setFallbackQuestions(); 
     } finally {
       setLoading(false);
     }
-  };
+  }, [setFallbackQuestions]);
 
-  // --- DATA CADANGAN ---
-  const useFallbackQuestions = () => {
-    setQuestions([
-        {
-            question: "Apa nama lain dari Museum Sejarah Jakarta?",
-            options: ["Museum Fatahillah", "Museum Nasional", "Museum Wayang", "Museum Bank"],
-            correctIndex: 0
-        },
-        {
-            question: "Terletak di kawasan manakah museum ini?",
-            options: ["Kota Baru", "Kota Tua", "Monas", "Ancol"],
-            correctIndex: 1
-        },
-        {
-            question: "Gedung ini dahulu digunakan sebagai apa?",
-            options: ["Kantor Pos", "Stasiun Kereta", "Balai Kota Batavia", "Gudang Rempah"],
-            correctIndex: 2
-        }
-    ]);
-    setLoading(false);
-  };
+  useEffect(() => {
+    if (museum) {
+      generateQuiz(museum.name);
+    }
+  }, [museum, generateQuiz]);
 
   const handleSelectAnswer = (questionIndex: number, optionIndex: number) => {
     setSelectedAnswers(prev => ({ ...prev, [questionIndex]: optionIndex }));

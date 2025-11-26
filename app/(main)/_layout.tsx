@@ -111,7 +111,7 @@ export default function TabLayout() {
 
       {/* TAB 3: ACHIEVEMENT */}
       <Tabs.Screen
-        name="(achievement)/index"
+        name="(achievement)"
         options={{
           tabBarIcon: ({ focused }) => (
             <AnimatedTabIcon 

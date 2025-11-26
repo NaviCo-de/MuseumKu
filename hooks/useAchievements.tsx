@@ -48,61 +48,64 @@ type AchievementContextValue = {
   recordQuizCompletion: () => void;
   recordShare: () => void;
   recordDailyCheckIn: () => boolean;
+  resetProgress: () => Promise<void>;
 };
 
 const STORAGE_KEY = 'museumku:achievement-progress';
 
 const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   {
-    id: 'visit-1',
-    title: 'Kunjungan Perdana',
-    description: 'Selesaikan perjalanan museum pertamamu.',
-    target: 1,
-    reward: '+50 poin',
-    rewardPoints: 50,
+    id: 'culture-digger',
+    title: 'Culture Digger',
+    description: 'Peroleh medal sebanyak-banyaknya untuk mendapatkan batch pada akunmu!',
+    target: 10,
+    reward: '+100 poin',
+    rewardPoints: 100,
+    category: 'berbagi',
+  },
+  {
+    id: 'museum-point-guard',
+    title: 'Museum Point Guard',
+    description: 'Checkpoint pada tiap section di museum yang dikunjungi.',
+    target: 50,
+    reward: '+120 poin',
+    rewardPoints: 120,
     category: 'kunjungan',
   },
   {
-    id: 'visit-3',
-    title: 'Penjelajah Kota Tua',
-    description: 'Kunjungi 3 museum berbeda di Jakarta.',
-    target: 3,
-    reward: 'Badge Perintis',
+    id: 'explorer',
+    title: 'The Explorer',
+    description: 'Kunjungi dan eksplor banyak museum di Indonesia.',
+    target: 20,
+    reward: '+90 poin',
+    rewardPoints: 90,
     category: 'kunjungan',
   },
   {
-    id: 'quiz-3',
-    title: 'Cendekia Museum',
-    description: 'Selesaikan 3 kuis setelah kunjungan.',
-    target: 3,
+    id: 'a-student',
+    title: 'A+ Student',
+    description: 'Dapatkan poin dengan mengerjakan kuis setelah mengunjungi museum.',
+    target: 50,
     reward: '+70 poin',
     rewardPoints: 70,
     category: 'kuis',
   },
   {
-    id: 'share-1',
-    title: 'Cerita Pertama',
-    description: 'Bagikan 1 postingan perjalananmu.',
-    target: 1,
-    reward: 'Badge Storyteller',
+    id: 'partner',
+    title: 'Well Know Partner',
+    description: 'Ajak teman untuk menjelajahi museum bersama.',
+    target: 30,
+    reward: '+60 poin',
+    rewardPoints: 60,
     category: 'berbagi',
-  },
-  {
-    id: 'streak-7',
-    title: 'Streak Mingguan',
-    description: 'Check-in 7 hari berturut-turut.',
-    target: 7,
-    reward: '+120 poin',
-    rewardPoints: 120,
-    category: 'streak',
   },
 ];
 
 const DEFAULT_PROGRESS: AchievementProgressState = {
-  visitedMuseums: [],
-  quizCompleted: 0,
-  shares: 0,
-  streak: 0,
+  visitedMuseums: Array.from({ length: 50 }, (_, idx) => `museum-${idx + 1}`),
+  quizCompleted: 55,
+  shares: 32,
+  streak: 8,
   lastCheckInDate: null,
   claimed: {},
   points: 320,
@@ -264,6 +267,15 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
 
   const today = formatDate(new Date());
 
+  const resetProgress = useCallback(async () => {
+    setProgress(DEFAULT_PROGRESS);
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_PROGRESS));
+    } catch (error) {
+      console.warn('Gagal reset progres achievement', error);
+    }
+  }, []);
+
   const value: AchievementContextValue = {
     achievements: derivedAchievements,
     completedCount,
@@ -281,6 +293,7 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
     recordQuizCompletion,
     recordShare,
     recordDailyCheckIn,
+    resetProgress,
   };
 
   return <AchievementContext.Provider value={value}>{children}</AchievementContext.Provider>;
