@@ -7,7 +7,9 @@ import { MUSEUMS } from '@/constants/data';
 
 // --- KONFIGURASI GEMINI ---
 // Ganti ini dengan API Key asli Anda
-const GEMINI_API_KEY = "YOUR_API_KEY_HERE"; 
+// --- KONFIGURASI GEMINI ---
+// Mengambil dari .env (EXPO_PUBLIC_GEMINI_API_KEY)
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
 export default function QuizScreen() {
   const { id } = useLocalSearchParams();
