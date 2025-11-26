@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, StatusBar, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, StatusBar } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { MUSEUMS } from '@/constants/data';
 import { useAchievements } from '@/hooks/useAchievements';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// --- KONFIGURASI GEMINI ---
-// Ganti ini dengan API Key asli Anda
-const GEMINI_API_KEY = "YOUR_API_KEY_HERE"; 
+// --- KONFIGURASI ---
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+
+// GANTI JADI MODEL 'FLASH' (Versi Ringan & Gratis)
+// Kalau 'gemini-2.0-flash' belum jalan di regionmu, ganti ke 'gemini-1.5-flash'
+const GEMINI_MODEL_NAME = "gemini-2.0-flash"; 
 
 export default function QuizScreen() {
   const { id } = useLocalSearchParams();
@@ -19,7 +23,6 @@ export default function QuizScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedAnswers, setSelectedAnswers] = useState<{[key: number]: number}>({});
 
-  // 1. Generate Soal via Gemini saat halaman dibuka
   useEffect(() => {
     if (museum) {
       generateQuiz(museum.name);
@@ -27,42 +30,67 @@ export default function QuizScreen() {
   }, [museum]);
 
   const generateQuiz = async (museumName: string) => {
+    if (!GEMINI_API_KEY) {
+        console.warn("API Key hilang");
+        useFallbackQuestions();
+        return;
+    }
+
     setLoading(true);
     try {
-      const prompt = `Buatkan 3 soal pilihan ganda tentang "${museumName}" dalam bahasa Indonesia dengan tingkat jawaban dari rendah, sedang, hingga sulit masing masing per soal 1. 
-      Format output HARUS JSON murni tanpa markdown, array of objects dengan struktur:
+      // 1. Inisialisasi SDK
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      
+      // 2. Konfigurasi Model
+      const model = genAI.getGenerativeModel({ 
+        model: GEMINI_MODEL_NAME,
+        generationConfig: {
+            responseMimeType: "application/json", 
+        }
+      });
+
+      // 3. Prompt (Perintah)
+      const prompt = `Buatkan 3 soal pilihan ganda tentang "${museumName}" dalam bahasa Indonesia.
+      
+      Format JSON array murni:
       [
         {
           "question": "Pertanyaan...",
           "options": ["Pilihan A", "Pilihan B", "Pilihan C", "Pilihan D"],
-          "correctIndex": 0 // Index jawaban benar (0-3)
+          "correctIndex": 0 
         }
-      ]`;
+      ]
+      Pastikan correctIndex adalah angka 0-3.`;
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
-          })
-        }
-      );
+      // 4. Generate Content
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text(); 
 
-      const data = await response.json();
-      const textResponse = data.candidates[0].content.parts[0].text;
-      
-      // Bersihkan format jika ada markdown ```json ... ```
-      const cleanJson = textResponse.replace(/```json|```/g, '').trim();
-      const parsedQuestions = JSON.parse(cleanJson);
-      
+      console.log("Gemini Flash Response:", text);
+
+      // 5. Parse JSON
+      const parsedQuestions = JSON.parse(text);
       setQuestions(parsedQuestions);
-    } catch (error) {
-      console.error("Error Gemini:", error);
-      Alert.alert("Gagal", "Gagal memuat soal dari AI. Menggunakan soal cadangan.");
-      // Fallback ke data dummy
-      setQuestions([
+
+    } catch (error: any) {
+      console.error("Error SDK Gemini:", error);
+      
+      // Deteksi jika masih kena limit
+      if (error.message?.includes("429") || error.message?.includes("quota")) {
+         Alert.alert("Limit Tercapai", "Sedang menggunakan soal cadangan karena limit API habis.");
+      }
+      
+      // Fallback ke soal dummy
+      useFallbackQuestions(); 
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- DATA CADANGAN ---
+  const useFallbackQuestions = () => {
+    setQuestions([
         {
             question: "Apa nama lain dari Museum Sejarah Jakarta?",
             options: ["Museum Fatahillah", "Museum Nasional", "Museum Wayang", "Museum Bank"],
@@ -72,11 +100,14 @@ export default function QuizScreen() {
             question: "Terletak di kawasan manakah museum ini?",
             options: ["Kota Baru", "Kota Tua", "Monas", "Ancol"],
             correctIndex: 1
+        },
+        {
+            question: "Gedung ini dahulu digunakan sebagai apa?",
+            options: ["Kantor Pos", "Stasiun Kereta", "Balai Kota Batavia", "Gudang Rempah"],
+            correctIndex: 2
         }
-      ]);
-    } finally {
-      setLoading(false);
-    }
+    ]);
+    setLoading(false);
   };
 
   const handleSelectAnswer = (questionIndex: number, optionIndex: number) => {
@@ -84,7 +115,6 @@ export default function QuizScreen() {
   };
 
   const handleSubmit = () => {
-    // Hitung Skor
     let score = 0;
     let correctCount = 0;
     questions.forEach((q, idx) => {
@@ -102,8 +132,6 @@ export default function QuizScreen() {
         [
             { 
                 text: "Selesai", 
-                // UPDATE NAVIGASI: Balik ke halaman awal jelajah museum (List Museum)
-                // Menggunakan 'popToTop' atau navigate ke root tab jelajah
                 onPress: () => router.navigate('/(main)/(jelajah-museum)')
             }
         ]
@@ -117,7 +145,6 @@ export default function QuizScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#5D4037" />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
-        {/* Navigasi Back Manual */}
         <TouchableOpacity onPress={() => router.back()} style={styles.backRow}>
             <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
@@ -130,7 +157,7 @@ export default function QuizScreen() {
         {loading ? (
             <View style={{marginTop: 50, alignItems: 'center'}}>
                 <ActivityIndicator size="large" color="#5D4037" />
-                <Text style={{marginTop: 10, color: '#666'}}>AI sedang membuat soal...</Text>
+                <Text style={{marginTop: 10, color: '#666'}}>Sedang membuat soal...</Text>
             </View>
         ) : (
             <>
@@ -177,27 +204,17 @@ export default function QuizScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF' },
-  // Header
-  header: { backgroundColor: '#8D6E63', paddingBottom: 15 },
-  headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginTop: 10 },
-  avatar: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#FFF' },
-  headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#FFF', fontFamily: Platform.OS === 'ios' ? 'serif' : 'Roboto' },
-
-  scrollContent: { padding: 20, paddingBottom: 50 },
+  scrollContent: { padding: 20, paddingBottom: 50, paddingTop: 50 },
   backRow: { alignSelf: 'flex-start', marginBottom: 10 },
-  
   pageTitle: { fontSize: 28, fontWeight: 'bold', color: '#000' },
-  museumSubtitle: { fontSize: 16, color: '#8D6E63', fontWeight: 'bold', marginTop: 5 },
-
-  // Question Style
+  museumSubtitle: { fontSize: 16, color: '#8D6E63', fontWeight: 'bold', marginTop: 5, textAlign: 'center' },
   questionContainer: { marginBottom: 30 },
   questionLabel: { fontSize: 14, fontWeight: 'bold', marginBottom: 8, color: '#000' },
   questionText: { fontSize: 15, lineHeight: 22, color: '#000', marginBottom: 15 },
-  
   optionsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   optionCard: {
-    width: '48%', // Dua kolom
-    backgroundColor: '#EFEBE9', // Coklat sangat muda
+    width: '48%', 
+    backgroundColor: '#EFEBE9', 
     padding: 15,
     borderRadius: 8,
     marginBottom: 10,
@@ -207,12 +224,11 @@ const styles = StyleSheet.create({
     borderColor: '#D7CCC8'
   },
   optionSelected: {
-    backgroundColor: '#5D4037', // Coklat Tua saat dipilih
+    backgroundColor: '#5D4037', 
     borderColor: '#3E2723'
   },
   optionText: { color: '#5D4037', fontSize: 13, textAlign: 'center' },
   optionTextSelected: { color: '#FFF', fontWeight: 'bold' },
-
   submitButton: {
     backgroundColor: '#3E2723',
     paddingVertical: 15,

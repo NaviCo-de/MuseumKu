@@ -71,7 +71,7 @@ export default function PaymentScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backButton}  onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={28} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Beli Tiket</Text>
@@ -192,6 +192,7 @@ export default function PaymentScreen() {
 }
 
 const styles = StyleSheet.create({
+  backButton: { marginBottom: 80, alignSelf: 'flex-start' },
   container: { flex: 1, backgroundColor: '#FCFBFA' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 50, paddingBottom: 20 },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#000' },
