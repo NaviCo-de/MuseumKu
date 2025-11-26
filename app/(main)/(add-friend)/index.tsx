@@ -5,9 +5,10 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { collection, doc, setDoc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '../../../firebaseConfig';
-import { Colors } from '../../../constants/Colors';
+// 1. UPDATE IMPORT: Tambahkan getDoc dan writeBatch
+import { collection, doc, onSnapshot, getDoc, writeBatch } from 'firebase/firestore';
+import { auth, db } from '@/firebaseConfig';
+import { Colors } from '@/constants/Colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AddFriendScreen() {
@@ -19,6 +20,9 @@ export default function AddFriendScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [addedList, setAddedList] = useState<string[]>([]); 
+  
+  // State untuk loading saat tombol ditekan (biar user gak spam klik)
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   // 1. FETCH DATA (Realtime)
   useEffect(() => {
@@ -28,17 +32,13 @@ export default function AddFriendScreen() {
     // A. Listener User List
     const unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
        const usersList = snapshot.docs
-          // --- PERBAIKAN DI SINI (Tambah 'as any') ---
-          // Kita paksa TS menganggap hasil map ini punya semua property (username, email, dll)
           .map(doc => ({ id: doc.id, ...doc.data() } as any)) 
           .filter(u => u.id !== myUid); 
        
        setAllUsers(usersList);
        
-       // Update hasil search jika ada query
        if (searchQuery) {
          const lowerText = searchQuery.toLowerCase();
-         // Sekarang 'user' sudah dianggap 'any', jadi .username tidak akan merah lagi
          const filtered = usersList.filter(user => 
            (user.username && user.username.toLowerCase().includes(lowerText))
          );
@@ -61,7 +61,6 @@ export default function AddFriendScreen() {
     };
   }, []);
 
-  // 2. SEARCH LOGIC
   const handleSearch = (text: string) => {
     setSearchQuery(text);
     if (text.trim() === '') {
@@ -75,25 +74,56 @@ export default function AddFriendScreen() {
     }
   };
 
-  // 3. ADD FRIEND LOGIC
+  // 2. LOGIC ADD FRIEND YANG BENAR (TIMBAL BALIK)
   const handleAddFriend = async (targetUser: any) => {
     if (!auth.currentUser) return;
+    
+    setProcessingId(targetUser.id); // Set loading state spesifik untuk user ini
     try {
-      await setDoc(doc(db, "users", auth.currentUser.uid, "friends", targetUser.id), {
-        addedAt: new Date(),
-        username: targetUser.username,
-        photoProfile: targetUser.photoProfile
+      const myUid = auth.currentUser.uid;
+      const batch = writeBatch(db); // Gunakan Batch agar atomik (sukses semua atau gagal semua)
+
+      // Langkah A: Ambil data diri SAYA dulu (username & fotonya)
+      // Kita butuh ini untuk ditaruh di list teman si target
+      const myProfileSnap = await getDoc(doc(db, "users", myUid));
+      if (!myProfileSnap.exists()) {
+        throw new Error("Data profil Anda tidak ditemukan.");
+      }
+      const myData = myProfileSnap.data();
+
+      const now = new Date();
+
+      // Langkah B: Siapkan Referensi Dokumen
+      // 1. Masukkan Target ke List Teman SAYA
+      const myFriendRef = doc(db, "users", myUid, "friends", targetUser.id);
+      batch.set(myFriendRef, {
+        addedAt: now,
+        username: targetUser.username || "Unknown",
+        photoProfile: targetUser.photoProfile || null
       });
-    } catch (error) {
-      Alert.alert("Gagal", "Cek koneksi internet.");
+
+      // 2. Masukkan SAYA ke List Teman TARGET (INI YANG DULU HILANG)
+      const targetFriendRef = doc(db, "users", targetUser.id, "friends", myUid);
+      batch.set(targetFriendRef, {
+        addedAt: now,
+        username: myData.username || "Unknown",
+        photoProfile: myData.photoProfile || null
+      });
+
+      // Langkah C: Eksekusi Batch
+      await batch.commit();
+
+      // Tidak perlu Alert "Sukses" yang mengganggu, perubahan UI otomatis karena listener onSnapshot
+    } catch (error: any) {
+      Alert.alert("Gagal", error.message || "Cek koneksi internet.");
+    } finally {
+      setProcessingId(null);
     }
   };
 
-  // 4. LOGIC PEMISAHAN LIST (Sudah Teman vs Belum Teman)
   const friendsResult = filteredUsers.filter(user => addedList.includes(user.id));
   const strangersResult = filteredUsers.filter(user => !addedList.includes(user.id));
 
-  // COMPONENT CARD USER
   const UserItem = ({ item, isAdded }: { item: any, isAdded: boolean }) => (
     <TouchableOpacity 
       style={styles.card} 
@@ -110,13 +140,14 @@ export default function AddFriendScreen() {
           <Text style={styles.handle}>@{item.username?.toLowerCase().replace(/\s/g, '')}</Text>
         </View>
 
-        {/* TOMBOL ADD FRIEND (UPDATED: Dengan Teks) */}
         <TouchableOpacity 
           style={[styles.actionButton, isAdded ? styles.btnAdded : styles.btnAdd]}
           onPress={() => !isAdded && handleAddFriend(item)}
-          disabled={isAdded}
+          disabled={isAdded || processingId === item.id}
         >
-          {isAdded ? (
+          {processingId === item.id ? (
+             <ActivityIndicator size="small" color="white" />
+          ) : isAdded ? (
             <>
               <Ionicons name="checkmark" size={16} color="#666" />
               <Text style={styles.btnTextAdded}>Berteman</Text>
@@ -134,7 +165,6 @@ export default function AddFriendScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Temukan Teman</Text>
         <View style={styles.searchBar}>
@@ -152,8 +182,6 @@ export default function AddFriendScreen() {
         <ActivityIndicator size="large" color={Colors.cokelatTua.base} style={{marginTop: 50}} />
       ) : (
         <ScrollView contentContainerStyle={{ padding: 20 }}>
-          
-          {/* GROUP 1: SUDAH BERTEMAN */}
           {friendsResult.length > 0 && (
             <View>
               {friendsResult.map(user => (
@@ -162,12 +190,10 @@ export default function AddFriendScreen() {
             </View>
           )}
 
-          {/* GARIS PEMISAH (Divider) */}
           {friendsResult.length > 0 && strangersResult.length > 0 && (
             <View style={styles.divider} />
           )}
 
-          {/* GROUP 2: BELUM BERTEMAN */}
           {strangersResult.length > 0 && (
             <View>
               {strangersResult.map(user => (
@@ -176,11 +202,9 @@ export default function AddFriendScreen() {
             </View>
           )}
 
-          {/* EMPTY STATE */}
           {filteredUsers.length === 0 && (
             <Text style={styles.emptyText}>User tidak ditemukan</Text>
           )}
-
         </ScrollView>
       )}
     </View>
@@ -201,8 +225,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F0F0', borderRadius: 12,
     paddingHorizontal: 15, paddingVertical: 10
   },
-  
-  // CARD STYLES
   card: {
     backgroundColor: 'white',
     borderRadius: 16,
@@ -224,8 +246,6 @@ const styles = StyleSheet.create({
   textContainer: { flex: 1, marginRight: 10 },
   username: { fontSize: 16, fontWeight: 'bold', color: '#333' },
   handle: { fontSize: 13, color: 'gray' },
-  
-  // TOMBOL STYLES (PILL SHAPE)
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -234,35 +254,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     gap: 6,
-    minWidth: 120, // Lebar minimal agar teks muat
+    minWidth: 120, 
   },
-  btnAdd: {
-    backgroundColor: Colors.cokelatTua.base,
-  },
-  btnAdded: {
-    backgroundColor: '#E0E0E0',
-  },
-  btnTextAdd: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  btnTextAdded: {
-    color: '#666',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-
-  // DIVIDER
-  divider: {
-    height: 1,
-    backgroundColor: '#E0E0E0',
-    marginVertical: 15,
-    marginHorizontal: 10
-  },
-  emptyText: {
-    textAlign: 'center',
-    color: '#999',
-    marginTop: 50
-  }
+  btnAdd: { backgroundColor: Colors.cokelatTua.base },
+  btnAdded: { backgroundColor: '#E0E0E0' },
+  btnTextAdd: { color: 'white', fontWeight: 'bold', fontSize: 12 },
+  btnTextAdded: { color: '#666', fontWeight: 'bold', fontSize: 12 },
+  divider: { height: 1, backgroundColor: '#E0E0E0', marginVertical: 15, marginHorizontal: 10 },
+  emptyText: { textAlign: 'center', color: '#999', marginTop: 50 }
 });
