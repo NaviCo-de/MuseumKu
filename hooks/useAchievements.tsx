@@ -3,6 +3,8 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 
 type AchievementCategory = 'kunjungan' | 'kuis' | 'berbagi' | 'streak';
 
+type StageKey = 'bronze' | 'silver' | 'gold';
+
 type AchievementDefinition = {
   id: string;
   title: string;
@@ -11,12 +13,23 @@ type AchievementDefinition = {
   reward: string;
   rewardPoints?: number;
   category: AchievementCategory;
+  stageTargets?: Partial<Record<StageKey, number>>;
 };
+
+type StageState = Record<
+  StageKey,
+  {
+    target: number;
+    achieved: boolean;
+  }
+>;
 
 type AchievementWithState = AchievementDefinition & {
   progress: number;
   isComplete: boolean;
   isClaimed: boolean;
+  stages: StageState;
+  stageTier: number;
 };
 
 type AchievementProgressState = {
@@ -26,6 +39,7 @@ type AchievementProgressState = {
   streak: number;
   lastCheckInDate: string | null;
   claimed: Record<string, boolean>;
+  stageAwards: Record<string, Record<StageKey, boolean>>;
   points: number;
 };
 
@@ -108,6 +122,7 @@ const DEFAULT_PROGRESS: AchievementProgressState = {
   streak: 8,
   lastCheckInDate: null,
   claimed: {},
+  stageAwards: {},
   points: 320,
 };
 
@@ -144,6 +159,38 @@ const getNextStreakState = (lastCheckInDate: string | null, currentStreak: numbe
   return { streak: 1, lastCheckInDate: today, didChange: true };
 };
 
+const STAGE_ORDER: StageKey[] = ['bronze', 'silver', 'gold'];
+
+const getStageTargets = (def: AchievementDefinition) => {
+  const base = {
+    bronze: Math.max(1, Math.ceil(def.target * 0.33)),
+    silver: Math.max(1, Math.ceil(def.target * 0.66)),
+    gold: def.target,
+  };
+
+  if (!def.stageTargets) return base;
+
+  return {
+    bronze: def.stageTargets.bronze ?? base.bronze,
+    silver: def.stageTargets.silver ?? base.silver,
+    gold: def.stageTargets.gold ?? base.gold,
+  };
+};
+
+const getCategoryProgress = (progress: AchievementProgressState, category: AchievementCategory) => {
+  switch (category) {
+    case 'kunjungan':
+      return progress.visitedMuseums.length;
+    case 'kuis':
+      return progress.quizCompleted;
+    case 'berbagi':
+      return progress.shares;
+    case 'streak':
+    default:
+      return progress.streak;
+  }
+};
+
 export function AchievementProvider({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = useState<AchievementProgressState>(DEFAULT_PROGRESS);
   const [hydrated, setHydrated] = useState(false);
@@ -177,17 +224,24 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
 
   const derivedAchievements = useMemo<AchievementWithState[]>(() => {
     return ACHIEVEMENT_DEFINITIONS.map(def => {
-      const baseProgress =
-        def.category === 'kunjungan'
-          ? progress.visitedMuseums.length
-          : def.category === 'kuis'
-          ? progress.quizCompleted
-          : def.category === 'berbagi'
-          ? progress.shares
-          : progress.streak;
-
+      const baseProgress = getCategoryProgress(progress, def.category);
       const clampedProgress = Math.min(baseProgress, def.target);
-      const isComplete = clampedProgress >= def.target;
+      const stageTargets = getStageTargets(def);
+      const stages: StageState = STAGE_ORDER.reduce((acc, stage) => {
+        return {
+          ...acc,
+          [stage]: {
+            target: stageTargets[stage],
+            achieved: Boolean(progress.stageAwards[def.id]?.[stage]),
+          },
+        };
+      }, {} as StageState);
+
+      const stageTier = STAGE_ORDER.reduce((tier, stage, idx) => {
+        return stages[stage].achieved ? idx : tier;
+      }, -1);
+
+      const isComplete = clampedProgress >= def.target || stageTier === 2;
       const isClaimed = Boolean(progress.claimed[def.id]);
 
       return {
@@ -195,9 +249,44 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
         progress: clampedProgress,
         isComplete,
         isClaimed,
+        stages,
+        stageTier,
       };
     });
   }, [progress]);
+
+  // Auto-award stage badges when thresholds are crossed
+  useEffect(() => {
+    if (!hydrated) return;
+    setProgress(prev => {
+      let didChange = false;
+      const nextStageAwards = { ...prev.stageAwards };
+
+      ACHIEVEMENT_DEFINITIONS.forEach(def => {
+        const stageTargets = getStageTargets(def);
+        const baseProgress = getCategoryProgress(prev, def.category);
+        const current = nextStageAwards[def.id] ?? { bronze: false, silver: false, gold: false };
+        let updated = current;
+
+        STAGE_ORDER.forEach(stage => {
+          if (!updated[stage] && baseProgress >= stageTargets[stage]) {
+            if (updated === current) {
+              updated = { ...current };
+            }
+            updated[stage] = true;
+            didChange = true;
+          }
+        });
+
+        if (updated !== current || !(def.id in nextStageAwards)) {
+          nextStageAwards[def.id] = updated;
+        }
+      });
+
+      if (!didChange) return prev;
+      return { ...prev, stageAwards: nextStageAwards };
+    });
+  }, [hydrated, progress]);
 
   const completedCount = useMemo(
     () => derivedAchievements.filter(item => item.isComplete || item.isClaimed).length,

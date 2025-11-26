@@ -23,36 +23,34 @@ export default function MedalsScreen() {
     return order.map(id => map.get(id)).filter(Boolean);
   }, [achievements]);
 
-  const getTier = (pct: number) => {
-    if (pct >= 1) return 2; // Gold
-    if (pct >= 0.66) return 1; // Silver
-    if (pct >= 0.33) return 0; // Bronze
-    return -1; // None
-  };
-
   const renderMedals = (achievement: AchievementItem) => {
-    const progressPct = Math.min(achievement.progress / achievement.target, 1);
-    const tier = getTier(progressPct);
+    const isOwned = achievement.isClaimed;
+    const tier = isOwned ? achievement.stageTier ?? -1 : -1;
     const medalDisplay = [
       { color: '#D4AF37', label: '#1', requiredTier: 2 }, // Gold
       { color: '#C0C0C0', label: '#2', requiredTier: 1 }, // Silver
       { color: '#CD7F32', label: '#3', requiredTier: 0 }, // Bronze
     ];
     const rewardLabel =
-      tier >= 2
+      !isOwned
+        ? 'Belum dimiliki'
+        : tier >= 2
         ? 'Koleksi lengkap'
         : achievement.rewardPoints && achievement.rewardPoints > 0
         ? `+${achievement.rewardPoints} poin`
         : 'Medali';
 
     return (
-      <View key={achievement.id} style={styles.medalCard}>
+      <View
+        key={achievement.id}
+        style={[styles.medalCard, !isOwned && styles.medalCardDisabled]}
+      >
         <Text style={styles.medalTitle}>{achievement.title}</Text>
         <Text style={styles.medalSubtitle}>{achievement.description}</Text>
         <Text style={styles.rewardLabel}>{rewardLabel}</Text>
         <View style={styles.medalRow}>
           {medalDisplay.map((item, idx) => {
-            const unlocked = tier >= item.requiredTier;
+            const unlocked = isOwned && tier >= item.requiredTier;
             return (
               <View key={idx} style={styles.medalItem}>
                 <Ionicons
@@ -146,6 +144,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 6,
     elevation: 3,
+  },
+  medalCardDisabled: {
+    opacity: 0.5,
   },
   medalTitle: {
     fontWeight: '800',
