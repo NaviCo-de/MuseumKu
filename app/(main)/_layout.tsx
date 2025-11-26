@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Image, Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { Colors } from '../../constants/Colors';
 import CustomHeader from '../../components/CustomHeader';
 
@@ -17,7 +17,7 @@ const AnimatedTabIcon = ({ focused, title, iconActive, iconInactive }: any) => {
       damping: 15,
       stiffness: 150,
     });
-  }, [focused]);
+  }, [focused, scale]);
 
   const animatedCircleStyle = useAnimatedStyle(() => {
     return {

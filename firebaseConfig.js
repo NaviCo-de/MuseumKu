@@ -1,7 +1,7 @@
-import { initializeApp } from "firebase/app";
-import { initializeAuth, getReactNativePersistence, browserLocalPersistence } from "firebase/auth";
+import { getApp, getApps, initializeApp } from "firebase/app";
+import { initializeAuth, getReactNativePersistence, browserLocalPersistence, getAuth } from "firebase/auth";
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { Platform } from "react-native";
 
@@ -15,7 +15,8 @@ const firebaseConfig = {
   measurementId: "G-QDGBWZCFN9"
 };
 
-const app = initializeApp(firebaseConfig);
+// Reuse instance kalau sudah pernah di-initialize (menghindari error saat Fast Refresh)
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 // --- LOGIKA CERDAS DI SINI ---
 let authPersistence;
@@ -27,9 +28,21 @@ if (Platform.OS === 'web') {
   authPersistence = getReactNativePersistence(ReactNativeAsyncStorage);
 }
 
-export const auth = initializeAuth(app, {
-  persistence: authPersistence
-});
+export const auth = (() => {
+  try {
+    return initializeAuth(app, { persistence: authPersistence });
+  } catch (error) {
+    // Kalau auth sudah pernah dibuat (mis. karena Fast Refresh), ambil instance yang ada
+    return getAuth(app);
+  }
+})();
 
-export const db = getFirestore(app);
+// Pakai auto detect long polling supaya Firestore tidak macet di React Native
+export const db = (() => {
+  try {
+    return initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
+  } catch (error) {
+    return getFirestore(app);
+  }
+})();
 export const storage = getStorage(app);
