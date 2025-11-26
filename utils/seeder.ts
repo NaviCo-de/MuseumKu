@@ -1,5 +1,5 @@
-import { collection, addDoc, Timestamp, doc, setDoc } from 'firebase/firestore';
-import { db } from '../firebaseConfig'; 
+import { addDoc, collection, doc, setDoc, Timestamp } from 'firebase/firestore';
+import { db } from '../firebaseConfig.js';
 
 // Data User Palsu (Supaya postingan ada yang punya)
 const DUMMY_USERS = [

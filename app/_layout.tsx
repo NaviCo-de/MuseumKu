@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../firebaseConfig'; 
-import { View, ActivityIndicator } from 'react-native';
+import AnimatedSplashScreen from '@/components/AnimatedSplashScreen';
 import { AchievementProvider } from '@/hooks/useAchievements';
-import AnimatedSplashScreen from '@/components/AnimatedSplashScreen'
+import { Stack, useRootNavigationState, useRouter, useSegments } from 'expo-router';
+import { onAuthStateChanged } from 'firebase/auth';
+import { useEffect, useState } from 'react';
+import { auth } from '../firebaseConfig.js';
 
 export default function RootLayout() {
   const [initializing, setInitializing] = useState(true);
