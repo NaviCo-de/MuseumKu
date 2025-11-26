@@ -31,7 +31,7 @@ yarn-error.*
 *.pem
 
 # local env files
-.env*.local
+.env
 
 # typescript
 *.tsbuildinfo
@@ -43,10 +43,3 @@ app-example
 /android
 
 # ... yang lain ...
-
-# Env
-.env
-.env.local
-.env.development
-.env.test
-.env.production

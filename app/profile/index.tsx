@@ -206,11 +206,11 @@ const styles = StyleSheet.create({
   statsNumber: { fontSize: 24, fontWeight: 'bold', color: 'white' },
   statsLabel: { fontSize: 12, color: '#E0E0E0' },
   avatarWrapper: { paddingHorizontal: 20, marginTop: -57, marginBottom: 10 },
-  bigAvatar: { width: 114, height: 114, borderRadius: 57, borderWidth: 4, borderColor: '#FFF' }, // Ditambah border putih biar rapi
+  bigAvatar: { width: 114, height: 114, borderRadius: 57 }, // Ditambah border putih biar rapi
   content: { flex: 1 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 15, marginTop: 10 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  addBtn: { backgroundColor: Colors.cokelatTua.base, width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
+  addBtn: { backgroundColor: Colors.cokelatTua.base, width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center' },
   postCard: { width: 280, backgroundColor: 'white', borderRadius: 16, marginRight: 15, padding: 12, borderWidth: 1, borderColor: '#f0f0f0', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
   postHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   tinyAvatar: { width: 28, height: 28, borderRadius: 14, marginRight: 8 },
