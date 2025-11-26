@@ -4,6 +4,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebaseConfig'; 
 import { View, ActivityIndicator } from 'react-native';
 import { AchievementProvider } from '@/hooks/useAchievements';
+import AnimatedSplashScreen from '@/components/AnimatedSplashScreen'
 
 export default function RootLayout() {
   const [initializing, setInitializing] = useState(true);
@@ -16,7 +17,9 @@ export default function RootLayout() {
   useEffect(() => {
     const subscriber = onAuthStateChanged(auth, (userState) => {
       setUser(userState);
-      if (initializing) setInitializing(false);
+      setTimeout(() => {
+        if (initializing) setInitializing(false);
+      }, 2000)
     });
     return subscriber;
   }, [initializing]);
@@ -37,11 +40,7 @@ export default function RootLayout() {
   }, [user, initializing, segments, navigationState?.key, router]);
 
   if (initializing) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#895737" />
-      </View>
-    );
+    return <AnimatedSplashScreen />;
   }
 
   return (

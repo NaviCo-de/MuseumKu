@@ -160,9 +160,12 @@ export default function AddFriendScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Temukan Teman</Text>
+        <View style={styles.headerContainer}>
+          <Text style={styles.headerTitle}>Teman</Text>
+          <Text>Ayo, Lengkapi Kunjungan Museummu!</Text>
+        </View>
         <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#999" style={{marginRight: 10}}/>
+          <Ionicons name="search" size={20} color={Colors.red[60]} style={{marginRight: 10}}/>
           <TextInput 
              placeholder="Cari nama..." 
              style={{flex:1}} 
@@ -170,8 +173,8 @@ export default function AddFriendScreen() {
              onChangeText={handleSearch}
           />
         </View>
+        <Text style={{ fontWeight: 'bold', fontSize: 20}}>Daftar Teman</Text>
       </View>
-
       {loading ? (
         <ActivityIndicator size="large" color={Colors.cokelatTua.base} style={{marginTop: 50}} />
       ) : (
@@ -208,16 +211,18 @@ export default function AddFriendScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9F9F9' },
   header: {
-    padding: 20,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
-  headerTitle: { fontSize: 22, fontWeight: 'bold', color: Colors.cokelatTua.base, marginBottom: 15 },
+  headerContainer: { flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 5, marginBottom: 50 },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: 'black' },
+  subHeaderTitle: { fontSize: 12, fontWeight: 'semibold', color: 'black'},
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#F0F0F0', borderRadius: 12,
-    paddingHorizontal: 15, paddingVertical: 10
+    backgroundColor: '#F0F0F0', borderRadius: 28,
+    paddingHorizontal: 15,
+    borderColor: Colors.red[60], borderWidth: 2,
+    height: 50, marginBottom: 30,
   },
   card: {
     backgroundColor: 'white',
@@ -255,5 +260,5 @@ const styles = StyleSheet.create({
   btnTextAdd: { color: 'white', fontWeight: 'bold', fontSize: 12 },
   btnTextAdded: { color: '#666', fontWeight: 'bold', fontSize: 12 },
   divider: { height: 1, backgroundColor: '#E0E0E0', marginVertical: 15, marginHorizontal: 10 },
-  emptyText: { textAlign: 'center', color: '#999', marginTop: 50 }
+  emptyText: { textAlign: 'center', color: '#999', marginTop: 50 },
 });
