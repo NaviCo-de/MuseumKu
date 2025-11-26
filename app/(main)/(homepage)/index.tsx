@@ -66,7 +66,7 @@ export default function Homepage() {
     <View style={styles.welcomeContainer}>
       <Text style={styles.welcomeTitle}>Hi, {username || "Penjelajah"}!</Text>
       <Text style={styles.welcomeSubtitle}>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+        Lihat pengalaman teman-temanmu di museum dan temukan inspirasi kunjungan berikutnya.
       </Text>
     </View>
   );
