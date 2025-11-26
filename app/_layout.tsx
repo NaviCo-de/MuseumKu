@@ -4,6 +4,7 @@ import { Stack, useRootNavigationState, useRouter, useSegments } from 'expo-rout
 import { onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { auth } from '../firebaseConfig.js';
+import { useFonts } from "expo-font";
 
 export default function RootLayout() {
   const [initializing, setInitializing] = useState(true);
@@ -11,6 +12,10 @@ export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
   const navigationState = useRootNavigationState(); // <--- INI KUNCINYA
+  const [loaded, error] = useFonts({
+    "CrimsonText-Regular": require("../assets/fonts/CrimsonText-Regular.ttf"),
+    "CrimsonText-Bold": require("../assets/fonts/CrimsonText-Bold.ttf"),
+  });
 
   // 1. Cek Status Firebase
   useEffect(() => {

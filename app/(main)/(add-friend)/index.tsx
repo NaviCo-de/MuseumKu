@@ -158,7 +158,7 @@ export default function AddFriendScreen() {
   );
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <ScrollView style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <View style={styles.headerContainer}>
           <Text style={styles.headerTitle}>Teman</Text>
@@ -204,7 +204,7 @@ export default function AddFriendScreen() {
           )}
         </ScrollView>
       )}
-    </View>
+    </ScrollView>
   );
 }
 
