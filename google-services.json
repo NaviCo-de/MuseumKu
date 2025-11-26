@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "850646870652",
+    "project_id": "museumku-1baf8",
+    "storage_bucket": "museumku-1baf8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:850646870652:android:7572be98e2dc865009b7f9",
+        "android_client_info": {
+          "package_name": "com.navico.museumku"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASLg0KbTqkh50nFjUj6AV9wNPPPmJvyhU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
