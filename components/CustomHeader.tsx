@@ -83,7 +83,7 @@ export default function CustomHeader() {
 
 const styles = StyleSheet.create({
   menubarIcon: {
-    width: 20,
+    width: 10,
     height: 20,
   },
   safeArea: {
@@ -93,9 +93,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 15,
-    paddingTop: 10,
+    paddingHorizontal: 30,
+    paddingBottom: 17,
+    paddingTop: 20,
   },
   // Container Kiri & Kanan harus punya width sama biar tengahnya presisi
   sideContainerLeft: {
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   headerTitle: {
-    fontSize: 30, // UPDATE: Font size jadi 30
+    fontSize: 25, // UPDATE: Font size jadi 30
     fontWeight: 'bold', 
     color: '#fff', 
     fontFamily: 'serif',

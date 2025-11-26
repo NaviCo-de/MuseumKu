@@ -10,7 +10,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
+  Image
 } from 'react-native';
 
 export default function JelajahMuseumScreen() {
@@ -66,12 +67,13 @@ export default function JelajahMuseumScreen() {
           style={styles.bookmarkButton}
           onPress={() => router.push('/(main)/(jelajah-museum)/favorites')}
         >
-          <Ionicons name="list" size={32} color="#000" /> 
-          {favoriteIds.length > 0 && (
-            <View style={styles.badgeNotification}>
-              <Text style={styles.badgeText}>{favoriteIds.length}</Text>
-            </View>
-          )}
+          {/* GANTI IONICONS DENGAN IMAGE INI */}
+          <Image 
+            source={require('@/assets/images/icon-favorit.png')} // <-- Sesuaikan nama file kamu
+            style={{ width: 70, height: 50 }} // Sesuaikan ukuran biar pas
+            resizeMode="contain"
+          />
+
         </TouchableOpacity>
       </View>
 
@@ -142,7 +144,7 @@ const styles = StyleSheet.create({
 
   // Container untuk Judul & Search (bukan Header Navigasi)
   topContentContainer: {
-    marginTop: 50,
+    marginTop: 29,
     paddingHorizontal: 20,
     marginBottom: 10,
   },

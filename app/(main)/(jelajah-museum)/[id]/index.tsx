@@ -12,19 +12,14 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors'; 
 import { MUSEUMS } from '@/constants/data'; 
-import { useMuseumFavorites } from '@/hooks/useMuseumFavorites'; // Import Hook
+import { useMuseumFavorites } from '@/hooks/useMuseumFavorites';
 
 export default function MuseumDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   
-  // Ambil data static berdasarkan ID URL
   const museum = MUSEUMS.find(m => m.id === id);
-  
-  // Ambil logic favorites
   const { favoriteIds, toggleFavorite } = useMuseumFavorites();
-  
-  // Cek apakah museum ini ada di list favorit user
   const isFavorited = typeof id === 'string' && favoriteIds.includes(id);
 
   if (!museum) return null;
@@ -38,13 +33,13 @@ export default function MuseumDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={32} color="#000" />
-        </TouchableOpacity>
+        {/* HEADER */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={28} color="#000" />
+          </TouchableOpacity>
+          <View style={{width: 28}} />
+        </View>
 
         <View style={styles.titleSection}>
           <Text style={styles.museumName}>{museum.name}</Text>
@@ -80,7 +75,6 @@ export default function MuseumDetailScreen() {
               </View>
             </View>
 
-            {/* Tombol Favorite Terhubung ke Firebase */}
             <TouchableOpacity 
                 onPress={() => toggleFavorite(museum.id)}
                 style={styles.favButton}
@@ -116,27 +110,136 @@ export default function MuseumDetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF' },
-  scrollContent: { padding: 20, paddingBottom: 40 },
-  backButton: { marginBottom: 15, alignSelf: 'flex-start' },
-  titleSection: { alignItems: 'center', marginBottom: 25 },
-  museumName: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 8, color: '#000' },
-  museumAddress: { fontSize: 12, textAlign: 'center', color: '#000', lineHeight: 20, paddingHorizontal: 10 },
-  contentRow: { flexDirection: 'row', marginBottom: 15, gap: 15, alignItems: 'flex-start' },
-  mainImage: { width: 150, height: 150, borderRadius: 4, backgroundColor: '#EEE' },
-  introTextContainer: { flex: 1 },
-  introText: { fontSize: 13, color: '#000', lineHeight: 18, textAlign: 'left', fontWeight: 'semibold' },
-  fullDesc: { fontSize: 13, color: '#000', lineHeight: 18, textAlign: 'justify', marginBottom: 20, fontWeight: 'semibold' },
-  ticketSection: { marginTop: 10, marginBottom: 30 },
-  ticketHeader: { fontSize: 15, fontWeight: 'bold', marginBottom: 10, color: '#000' },
-  ticketRowContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  ticketPriceList: { flex: 1, marginRight: 20 },
-  priceRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-  ticketLabel: { fontSize: 14, color: '#000', flex: 1 },
-  ticketValue: { fontSize: 14, color: '#000', flex: 1, textAlign: 'left' },
-  favButton: { padding: 5 }, // Supaya area sentuh lebih enak
-  actionButtons: { gap: 15, alignItems: 'center' },
-  primaryButton: { backgroundColor: '#3E2723', width: '80%', paddingVertical: 15, borderRadius: 25, alignItems: 'center' },
-  primaryButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
-  secondaryButton: { backgroundColor: '#6D4C41', width: '90%', paddingVertical: 15, borderRadius: 25, alignItems: 'center' },
-  secondaryButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
+  
+  // Header
+  header: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+    marginBottom: 20
+  },
+  backButton: { 
+    padding: 5 
+  },
+
+  scrollContent: { 
+    paddingHorizontal: 20,
+    paddingTop: 30,
+    paddingBottom: 40 
+  },
+  
+  titleSection: { 
+    alignItems: 'center', 
+    marginBottom: 25 
+  },
+  museumName: { 
+    fontSize: 24, 
+    fontWeight: 'bold', 
+    textAlign: 'center', 
+    marginBottom: 8, 
+    color: '#000' 
+  },
+  museumAddress: { 
+    fontSize: 12, 
+    textAlign: 'center', 
+    color: '#000', 
+    lineHeight: 20, 
+    paddingHorizontal: 10 
+  },
+  contentRow: { 
+    flexDirection: 'row', 
+    marginBottom: 15, 
+    gap: 15, 
+    alignItems: 'flex-start' 
+  },
+  mainImage: { 
+    width: 150, 
+    height: 150, 
+    borderRadius: 4, 
+    backgroundColor: '#EEE' 
+  },
+  introTextContainer: { 
+    flex: 1 
+  },
+  introText: { 
+    fontSize: 13, 
+    color: '#000', 
+    lineHeight: 18, 
+    textAlign: 'left', 
+    fontWeight: 'semibold' 
+  },
+  fullDesc: { 
+    fontSize: 13, 
+    color: '#000', 
+    lineHeight: 18, 
+    textAlign: 'justify', 
+    marginBottom: 20, 
+    fontWeight: 'semibold' 
+  },
+  ticketSection: { 
+    marginTop: 10, 
+    marginBottom: 30 
+  },
+  ticketHeader: { 
+    fontSize: 15, 
+    fontWeight: 'bold', 
+    marginBottom: 10, 
+    color: '#000' 
+  },
+  ticketRowContainer: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center' 
+  },
+  ticketPriceList: { 
+    flex: 1, 
+    marginRight: 20 
+  },
+  priceRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    marginBottom: 5 
+  },
+  ticketLabel: { 
+    fontSize: 14, 
+    color: '#000', 
+    flex: 1 
+  },
+  ticketValue: { 
+    fontSize: 14, 
+    color: '#000', 
+    flex: 1, 
+    textAlign: 'left' 
+  },
+  favButton: { 
+    padding: 5 
+  },
+  actionButtons: { 
+    gap: 15, 
+    alignItems: 'center' 
+  },
+  primaryButton: { 
+    backgroundColor: '#3E2723', 
+    width: '80%', 
+    paddingVertical: 15, 
+    borderRadius: 25, 
+    alignItems: 'center' 
+  },
+  primaryButtonText: { 
+    color: '#FFF', 
+    fontWeight: 'bold', 
+    fontSize: 16,
+  },
+  secondaryButton: { 
+    backgroundColor: '#6D4C41', 
+    width: '90%', 
+    paddingVertical: 15, 
+    borderRadius: 25, 
+    alignItems: 'center' 
+  },
+  secondaryButtonText: { 
+    color: '#FFF', 
+    fontWeight: 'bold', 
+    fontSize: 16 
+  },
 });

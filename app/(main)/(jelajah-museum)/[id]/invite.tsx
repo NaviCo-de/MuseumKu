@@ -14,18 +14,18 @@ import { Ionicons } from '@expo/vector-icons';
 
 // Dummy Data
 const DUMMY_CLOSE_FRIENDS = [
-  { id: '1', name: 'shandy_darrell' },
-  { id: '2', name: 'shandy_darrell' },
-  { id: '3', name: 'shandy_darrell' },
+  { id: '1', name: 'ari_darrell' },
+  { id: '2', name: 'rahel.meilinda' },
+  { id: '3', name: 'aldo_fahrezy' },
 ];
 
 const DUMMY_ALL_FRIENDS = [
-  { id: '4', name: 'shandy_darrell' },
-  { id: '5', name: 'shandy_darrell' },
-  { id: '6', name: 'shandy_darrell' },
-  { id: '7', name: 'shandy_darrell' },
-  { id: '8', name: 'shandy_darrell' },
-  { id: '9', name: 'shandy_darrell' },
+  { id: '4', name: 'kayla.kirana' },
+  { id: '5', name: 'bima_wijaya' },
+  { id: '6', name: 'nara.satria' },
+  { id: '7', name: 'intan_putrii' },
+  { id: '8', name: 'fajar.ramadhan' },
+  { id: '9', name: 'lila_anggita' },
 ];
 
 export default function InviteFriendsScreen() {

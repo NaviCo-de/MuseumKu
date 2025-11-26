@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { db, auth } from '../../firebaseConfig'; 
+import { db, auth } from '@/firebaseConfig'; 
 import { collection, query, where, onSnapshot, doc, getDoc, setDoc, deleteDoc, orderBy } from 'firebase/firestore';
 import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
