@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, ScrollView, ActivityIndicator } from 'react-native';
 import { db, auth } from '@/firebaseConfig'; // Pastikan path sesuai
 import { collection, query, where, onSnapshot, doc, getDoc, orderBy } from 'firebase/firestore';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
+import { useAchievements } from '@/hooks/useAchievements';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [myPosts, setMyPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { achievements } = useAchievements();
   
   // 1. State yang sudah ada (Teman)
   const [friendCount, setFriendCount] = useState(0);
@@ -87,6 +89,27 @@ export default function ProfileScreen() {
       </View>
     </View>
   );
+
+  const medalColors = ['#CD7F32', '#C0C0C0', '#D4AF37'];
+  const medalLabels = ['Bronze', 'Silver', 'Gold'];
+
+  const displayedMedals = useMemo(() => {
+    const claimed = achievements
+      .filter(item => item.isClaimed)
+      .sort((a, b) => (b.stageTier ?? -1) - (a.stageTier ?? -1))
+      .slice(0, 3);
+
+    if (claimed.length === 3) return claimed;
+
+    const placeholders = Array.from({ length: 3 - claimed.length }).map((_, idx) => ({
+      id: `placeholder-${idx}`,
+      title: 'Belum dimiliki',
+      stageTier: -1,
+      isPlaceholder: true,
+    }));
+
+    return [...claimed, ...placeholders];
+  }, [achievements]);
 
   return (
     <View style={styles.container}>
@@ -173,6 +196,35 @@ export default function ProfileScreen() {
            ))
         )}
         {/* --------------------------------------------------------- */}
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Medali Kamu</Text>
+          <TouchableOpacity onPress={() => router.push('/(main)/(achievement)/medals')}>
+            <Text style={{color: Colors.cokelatTua.base}}>Lihat semua</Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 20, gap: 10, paddingBottom: 12 }}
+        >
+          {displayedMedals.map(item => {
+            const isPlaceholder = (item as any).isPlaceholder;
+            const tier = item.stageTier ?? -1;
+            const owned = !isPlaceholder;
+            const medalColor = owned ? (tier >= 0 ? medalColors[tier] : Colors.cokelatTua.base) : Colors.neutral[60];
+            const medalLabel = owned ? (tier >= 0 ? medalLabels[tier] : 'Sudah diklaim') : 'Belum dimiliki';
+            return (
+              <View key={item.id} style={[styles.medalCard, isPlaceholder && styles.medalCardDisabled]}>
+                <Ionicons name="medal" size={28} color={medalColor} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.medalTitle}>{isPlaceholder ? 'Medal kosong' : item.title}</Text>
+                  <Text style={styles.medalSubtitle}>{medalLabel}</Text>
+                </View>
+              </View>
+            );
+          })}
+        </ScrollView>
         
         <View style={{height: 30}} />
       </ScrollView>
@@ -206,11 +258,15 @@ const styles = StyleSheet.create({
   statsNumber: { fontSize: 24, fontWeight: 'bold', color: 'white' },
   statsLabel: { fontSize: 12, color: '#E0E0E0' },
   avatarWrapper: { paddingHorizontal: 20, marginTop: -57, marginBottom: 10 },
-  bigAvatar: { width: 114, height: 114, borderRadius: 57 }, // Ditambah border putih biar rapi
+  bigAvatar: { width: 114, height: 114, borderRadius: 57, borderWidth: 4, borderColor: '#FFF' }, // Ditambah border putih biar rapi
   content: { flex: 1 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 15, marginTop: 10 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  addBtn: { backgroundColor: Colors.cokelatTua.base, width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center' },
+  addBtn: { backgroundColor: Colors.cokelatTua.base, width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
+  medalCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#f0f0f0', minWidth: 200, gap: 10, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  medalCardDisabled: { opacity: 0.5 },
+  medalTitle: { fontSize: 14, fontWeight: 'bold', color: '#333' },
+  medalSubtitle: { fontSize: 12, color: '#666' },
   postCard: { width: 280, backgroundColor: 'white', borderRadius: 16, marginRight: 15, padding: 12, borderWidth: 1, borderColor: '#f0f0f0', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
   postHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   tinyAvatar: { width: 28, height: 28, borderRadius: 14, marginRight: 8 },

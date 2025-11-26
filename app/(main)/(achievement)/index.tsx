@@ -32,13 +32,6 @@ export default function AchievementScreen() {
     return [...ordered, ...remaining];
   }, [achievements]);
 
-  const getMedalTier = (pct: number) => {
-    if (pct >= 1) return 2; // Gold
-    if (pct >= 0.66) return 1; // Silver
-    if (pct >= 0.33) return 0; // Bronze
-    return -1; // None yet
-  };
-
   const getRewardLabel = (achievement: ReturnType<typeof useAchievements>['achievements'][number]) => {
     if (achievement.rewardPoints && achievement.rewardPoints > 0) {
       return `+${achievement.rewardPoints} poin`;
@@ -67,7 +60,7 @@ export default function AchievementScreen() {
   const renderMission = (achievement: ReturnType<typeof useAchievements>['achievements'][number]) => {
     const progressPct = Math.min(achievement.progress / achievement.target, 1);
     const completed = achievement.isComplete || achievement.isClaimed;
-    const medalTier = getMedalTier(progressPct);
+    const medalTier = achievement.stageTier ?? -1;
     const medalColors = ['#CD7F32', '#C0C0C0', '#D4AF37']; // Bronze, Silver, Gold
     const medalColor = medalTier >= 0 ? medalColors[medalTier] : Colors.neutral[60];
     const buttonDisabled = !achievement.isComplete || achievement.isClaimed;
