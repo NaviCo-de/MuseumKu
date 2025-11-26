@@ -83,7 +83,7 @@ export default function CustomHeader() {
 
 const styles = StyleSheet.create({
   menubarIcon: {
-    width: 10,
+    width: 20,
     height: 20,
   },
   safeArea: {
