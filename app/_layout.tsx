@@ -19,7 +19,7 @@ export default function RootLayout() {
       setUser(userState);
       setTimeout(() => {
         if (initializing) setInitializing(false);
-      }, 10000)
+      }, 2000)
     });
     return subscriber;
   }, [initializing]);
