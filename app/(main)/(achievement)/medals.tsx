@@ -11,7 +11,7 @@ export default function MedalsScreen() {
   const router = useRouter();
   const { achievements } = useAchievements();
 
-  const orderedAchievements = useMemo(() => {
+  const orderedAchievements = useMemo<AchievementItem[]>(() => {
     const order = [
       'culture-digger',
       'museum-point-guard',
@@ -20,7 +20,9 @@ export default function MedalsScreen() {
       'partner',
     ];
     const map = new Map(achievements.map(item => [item.id, item]));
-    return order.map(id => map.get(id)).filter(Boolean);
+    return order
+      .map(id => map.get(id))
+      .filter((item): item is AchievementItem => Boolean(item));
   }, [achievements]);
 
   const renderMedals = (achievement: AchievementItem) => {

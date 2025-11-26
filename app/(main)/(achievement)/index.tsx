@@ -13,11 +13,13 @@ import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { useAchievements } from '@/hooks/useAchievements';
 
+type AchievementItem = ReturnType<typeof useAchievements>['achievements'][number];
+
 export default function AchievementScreen() {
   const router = useRouter();
   const { achievements, loading, claimAchievement, points, resetProgress } = useAchievements();
 
-  const orderedAchievements = useMemo(() => {
+  const orderedAchievements = useMemo<AchievementItem[]>(() => {
     const order = [
       'culture-digger',
       'museum-point-guard',
@@ -26,20 +28,22 @@ export default function AchievementScreen() {
       'partner',
     ];
     const map = new Map(achievements.map(item => [item.id, item]));
-    const ordered = order.map(id => map.get(id)).filter(Boolean);
+    const ordered = order
+      .map(id => map.get(id))
+      .filter((item): item is AchievementItem => Boolean(item));
     // Fallback: append any achievement not in the predefined order so nothing is hidden
     const remaining = achievements.filter(item => !order.includes(item.id));
     return [...ordered, ...remaining];
   }, [achievements]);
 
-  const getRewardLabel = (achievement: ReturnType<typeof useAchievements>['achievements'][number]) => {
+  const getRewardLabel = (achievement: AchievementItem) => {
     if (achievement.rewardPoints && achievement.rewardPoints > 0) {
       return `+${achievement.rewardPoints} poin`;
     }
     return 'Medali';
   };
 
-  const handleClaim = (achievement: ReturnType<typeof useAchievements>['achievements'][number]) => {
+  const handleClaim = (achievement: AchievementItem) => {
     const result = claimAchievement(achievement.id);
     if (!result.success) {
       Alert.alert(
@@ -57,7 +61,7 @@ export default function AchievementScreen() {
     Alert.alert('Hadiah diklaim', rewardText);
   };
 
-  const renderMission = (achievement: ReturnType<typeof useAchievements>['achievements'][number]) => {
+  const renderMission = (achievement: AchievementItem) => {
     const progressPct = Math.min(achievement.progress / achievement.target, 1);
     const completed = achievement.isComplete || achievement.isClaimed;
     const medalTier = achievement.stageTier ?? -1;

@@ -1,15 +1,12 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Image, Dimensions } from 'react-native';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withSpring, 
-  withTiming, 
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
   withSequence,
-  withDelay,
-  Easing
 } from 'react-native-reanimated';
-import { Colors } from '@/constants/Colors';
 
 const { width } = Dimensions.get('window');
 
@@ -30,7 +27,7 @@ export default function AnimatedSplashScreen() {
         withSpring(1.2, { damping: 10, stiffness: 80 }), // Membesar sedikit berlebih
         withTiming(1, { duration: 500 }) // Kembali ke ukuran normal
     );
-  }, []);
+  }, [opacity, scale]);
 
   // Style animasi yang digabungkan ke komponen
   const animatedStyle = useAnimatedStyle(() => {
@@ -42,13 +39,13 @@ export default function AnimatedSplashScreen() {
 
   return (
     <View style={styles.container}>
-        
-        <Image 
-            source={require('../assets/images/logo.png')} 
-            style={styles.logo} 
-            resizeMode="contain" 
-        />
-
+        <Animated.View style={[styles.logoContainer, animatedStyle]}>
+          <Image
+              source={require('../assets/images/logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+          />
+        </Animated.View>
     </View>
   );
 }

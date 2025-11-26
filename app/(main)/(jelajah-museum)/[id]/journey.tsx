@@ -75,7 +75,7 @@ export default function JourneyScreen() {
       -1, 
       false 
     );
-  }, []);
+  }, [translateY]);
 
   const animatedPinStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }]
@@ -341,5 +341,10 @@ const styles = StyleSheet.create({
     borderRadius: 16, // Radius 16
     alignItems: 'center' 
   },
+<<<<<<< Updated upstream
   secondaryButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 }
 });
+=======
+  secondaryButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 } // Font size disamakan
+});
+>>>>>>> Stashed changes
