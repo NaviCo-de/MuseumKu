@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, ScrollView, ActivityIndicator } from 'react-native';
-import { db, auth } from '../../firebaseConfig'; 
-// 1. Pastikan import ini lengkap
+import { db, auth } from '@/firebaseConfig'; // Pastikan path sesuai
 import { collection, query, where, onSnapshot, doc, getDoc, orderBy } from 'firebase/firestore';
-import { Colors } from '../../constants/Colors';
+import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -13,8 +12,10 @@ export default function ProfileScreen() {
   const [myPosts, setMyPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // 2. State untuk jumlah teman
+  // 1. State yang sudah ada (Teman)
   const [friendCount, setFriendCount] = useState(0);
+  // 2. State BARU (History Kunjungan)
+  const [visits, setVisits] = useState<any[]>([]);
 
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -46,16 +47,28 @@ export default function ProfileScreen() {
       setLoading(false);
     });
 
-    // C. HITUNG JUMLAH TEMAN (Realtime)
-    // Kita pasang CCTV di folder 'friends' punya user ini
+    // C. Hitung Jumlah Teman (Realtime) - LOGIC ANDA TETAP
     const unsubFriends = onSnapshot(collection(db, "users", myUid, "friends"), (snapshot) => {
-      // snapshot.size langsung memberikan jumlah dokumen (jumlah teman)
       setFriendCount(snapshot.size);
+    });
+
+    // D. Ambil History Kunjungan (LOGIC BARU)
+    const qVisits = query(
+      collection(db, "users", myUid, "visits"),
+      orderBy("visitedAt", "desc")
+    );
+    const unsubVisits = onSnapshot(qVisits, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data() 
+      }));
+      setVisits(data);
     });
 
     return () => {
       unsubPosts();
       unsubFriends();
+      unsubVisits(); // Cleanup listener baru
     };
   }, []);
 
@@ -77,6 +90,8 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+      
       <View style={styles.headerBackground}>
         <View style={styles.headerTop}>
           <TouchableOpacity onPress={() => router.back()}>
@@ -95,7 +110,7 @@ export default function ProfileScreen() {
             <Text style={styles.headerHandle}>@{user?.username?.toLowerCase() || "user"}</Text>
           </View>
           <View style={styles.statsContainer}>
-            {/* 3. TAMPILKAN JUMLAH TEMAN DINAMIS DI SINI */}
+            {/* Logic Teman Tetap Ada */}
             <Text style={styles.statsNumber}>{friendCount}</Text>
             <Text style={styles.statsLabel}>Teman</Text>
           </View>
@@ -109,7 +124,7 @@ export default function ProfileScreen() {
         />
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Postingan Anda</Text>
           <TouchableOpacity style={styles.addBtn} onPress={() => router.push('/create-post')}>
@@ -132,23 +147,40 @@ export default function ProfileScreen() {
           />
         )}
 
+        {/* --- BAGIAN INI YANG DIUBAH (DARI HARDCODE KE DINAMIS) --- */}
         <View style={[styles.sectionHeader, {marginTop: 10}]}>
           <Text style={styles.sectionTitle}>Histori Kunjungan</Text>
           <Text style={{color: Colors.cokelatTua.base}}>Lihat semua</Text>
         </View>
         
-        <View style={styles.historyCard}>
-          <View style={{flex: 1}}>
-            <Text style={{fontWeight: 'bold'}}>Museum Wayang Jakarta</Text>
-            <Text style={{fontSize: 10, color: 'gray', marginTop: 4}}>06 November 2025</Text>
-          </View>
-          <View style={styles.ptsBadge}><Text style={{color:'white', fontSize:10}}>21 PTS</Text></View>
-        </View>
+        {visits.length === 0 ? (
+           <Text style={{textAlign: 'center', color: '#aaa', marginTop: 10, marginBottom: 30}}>Belum ada riwayat kunjungan.</Text>
+        ) : (
+           visits.map((visit) => (
+             <View key={visit.id} style={styles.historyCard}>
+               <View style={{flex: 1}}>
+                 <Text style={{fontWeight: 'bold'}}>{visit.museumName}</Text>
+                 <Text style={{fontSize: 10, color: 'gray', marginTop: 4}}>
+                    {visit.visitedAt?.seconds ? new Date(visit.visitedAt.seconds * 1000).toLocaleDateString('id-ID', {
+                        day: 'numeric', month: 'long', year: 'numeric'
+                    }) : 'Baru saja'}
+                 </Text>
+               </View>
+               <View style={styles.ptsBadge}>
+                   <Text style={{color:'white', fontSize:10}}>{visit.points} PTS</Text>
+               </View>
+             </View>
+           ))
+        )}
+        {/* --------------------------------------------------------- */}
+        
+        <View style={{height: 30}} />
       </ScrollView>
     </View>
   );
 }
 
+// Styles tetap sama persis dengan punya Anda
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   headerBackground: {
@@ -174,7 +206,7 @@ const styles = StyleSheet.create({
   statsNumber: { fontSize: 24, fontWeight: 'bold', color: 'white' },
   statsLabel: { fontSize: 12, color: '#E0E0E0' },
   avatarWrapper: { paddingHorizontal: 20, marginTop: -57, marginBottom: 10 },
-  bigAvatar: { width: 114, height: 114, borderRadius: 57},
+  bigAvatar: { width: 114, height: 114, borderRadius: 57, borderWidth: 4, borderColor: '#FFF' }, // Ditambah border putih biar rapi
   content: { flex: 1 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 15, marginTop: 10 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
@@ -186,6 +218,6 @@ const styles = StyleSheet.create({
   postImage: { width: '100%', height: 160, borderRadius: 10, marginBottom: 10, backgroundColor: '#eee' },
   postCaption: { fontSize: 13, color: '#444', marginBottom: 10, lineHeight: 18 },
   postActions: { flexDirection: 'row', gap: 16, justifyContent: 'flex-end', paddingRight: 5 },
-  historyCard: { flexDirection: 'row', marginHorizontal: 20, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: '#eee', alignItems: 'center', marginBottom: 30, backgroundColor: '#fafafa' },
+  historyCard: { flexDirection: 'row', marginHorizontal: 20, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: '#eee', alignItems: 'center', marginBottom: 10, backgroundColor: '#fafafa' },
   ptsBadge: { backgroundColor: '#555', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 }
 });
