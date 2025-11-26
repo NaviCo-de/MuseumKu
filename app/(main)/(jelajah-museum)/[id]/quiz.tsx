@@ -8,8 +8,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 // --- KONFIGURASI ---
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
-// GANTI JADI MODEL TERBARU (Gemini 3)
-const GEMINI_MODEL_NAME = "gemini-3-pro-preview"; 
+// GANTI JADI MODEL 'FLASH' (Versi Ringan & Gratis)
+// Kalau 'gemini-2.0-flash' belum jalan di regionmu, ganti ke 'gemini-1.5-flash'
+const GEMINI_MODEL_NAME = "gemini-2.0-flash"; 
 
 export default function QuizScreen() {
   const { id } = useLocalSearchParams();
@@ -41,16 +42,15 @@ export default function QuizScreen() {
       // 2. Konfigurasi Model
       const model = genAI.getGenerativeModel({ 
         model: GEMINI_MODEL_NAME,
-        // Gemini 3 sangat bagus dalam mengikuti instruksi JSON
         generationConfig: {
             responseMimeType: "application/json", 
         }
       });
 
-      // 3. Prompt
+      // 3. Prompt (Perintah)
       const prompt = `Buatkan 3 soal pilihan ganda tentang "${museumName}" dalam bahasa Indonesia.
       
-      Format JSON array:
+      Format JSON array murni:
       [
         {
           "question": "Pertanyaan...",
@@ -65,15 +65,21 @@ export default function QuizScreen() {
       const response = result.response;
       const text = response.text(); 
 
-      console.log("Gemini 3 Response:", text);
+      console.log("Gemini Flash Response:", text);
 
       // 5. Parse JSON
       const parsedQuestions = JSON.parse(text);
       setQuestions(parsedQuestions);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error SDK Gemini:", error);
-      // Fallback jika model preview sedang sibuk/error
+      
+      // Deteksi jika masih kena limit
+      if (error.message?.includes("429") || error.message?.includes("quota")) {
+         Alert.alert("Limit Tercapai", "Sedang menggunakan soal cadangan karena limit API habis.");
+      }
+      
+      // Fallback ke soal dummy
       useFallbackQuestions(); 
     } finally {
       setLoading(false);
@@ -147,7 +153,7 @@ export default function QuizScreen() {
         {loading ? (
             <View style={{marginTop: 50, alignItems: 'center'}}>
                 <ActivityIndicator size="large" color="#5D4037" />
-                <Text style={{marginTop: 10, color: '#666'}}>Gemini 3 sedang membuat soal...</Text>
+                <Text style={{marginTop: 10, color: '#666'}}>Sedang membuat soal...</Text>
             </View>
         ) : (
             <>
