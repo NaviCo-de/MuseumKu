@@ -48,6 +48,7 @@ type AchievementContextValue = {
   recordQuizCompletion: () => void;
   recordShare: () => void;
   recordDailyCheckIn: () => boolean;
+  resetProgress: () => Promise<void>;
 };
 
 const STORAGE_KEY = 'museumku:achievement-progress';
@@ -266,6 +267,15 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
 
   const today = formatDate(new Date());
 
+  const resetProgress = useCallback(async () => {
+    setProgress(DEFAULT_PROGRESS);
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_PROGRESS));
+    } catch (error) {
+      console.warn('Gagal reset progres achievement', error);
+    }
+  }, []);
+
   const value: AchievementContextValue = {
     achievements: derivedAchievements,
     completedCount,
@@ -283,6 +293,7 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
     recordQuizCompletion,
     recordShare,
     recordDailyCheckIn,
+    resetProgress,
   };
 
   return <AchievementContext.Provider value={value}>{children}</AchievementContext.Provider>;

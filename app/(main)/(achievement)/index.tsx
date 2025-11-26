@@ -15,7 +15,7 @@ import { useAchievements } from '@/hooks/useAchievements';
 
 export default function AchievementScreen() {
   const router = useRouter();
-  const { achievements, loading, claimAchievement, points } = useAchievements();
+  const { achievements, loading, claimAchievement, points, resetProgress } = useAchievements();
 
   const orderedAchievements = useMemo(() => {
     const order = [
@@ -139,6 +139,11 @@ export default function AchievementScreen() {
         >
           <Text style={styles.primaryButtonText}>Lihat Medali Saya</Text>
         </TouchableOpacity>
+        {__DEV__ && (
+          <TouchableOpacity style={styles.secondaryButton} onPress={resetProgress}>
+            <Text style={styles.secondaryButtonText}>Reset demo</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.sectionHeader}>
@@ -191,10 +196,23 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
   },
+  secondaryButton: {
+    marginTop: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.neutral[50],
+  },
   primaryButtonText: {
     color: '#fff',
     fontWeight: '700',
     fontSize: 14,
+  },
+  secondaryButtonText: {
+    color: Colors.cokelatTua.base,
+    fontWeight: '700',
+    fontSize: 12,
   },
   sectionHeader: {
     paddingHorizontal: 20,
