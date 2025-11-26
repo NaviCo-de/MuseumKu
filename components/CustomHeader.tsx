@@ -59,16 +59,20 @@ export default function CustomHeader() {
           onPress={() => setMenuVisible(false)}
         >
           <View style={styles.menuBox}>
-            <Text style={styles.menuLabel}>◈ Isi Menu</Text>
-            
             <TouchableOpacity style={styles.menuItem} onPress={handleToProfile}>
               <Text style={styles.menuText}>Akun Saya</Text>
-              <Text>👤</Text> 
+              <Image 
+                source={require('@/assets/images/my_account.png')}
+                style={styles.menubarIcon}
+              />
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
               <Text style={styles.menuText}>Keluar</Text>
-              <Text>🚪</Text>
+              <Image 
+                source={require('@/assets/images/log_out.png')}
+                style={styles.menubarIcon}
+              />
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -78,6 +82,10 @@ export default function CustomHeader() {
 }
 
 const styles = StyleSheet.create({
+  menubarIcon: {
+    width: 20,
+    height: 20,
+  },
   safeArea: {
     backgroundColor: Colors.cokelatMuda.base,
   },
@@ -138,10 +146,9 @@ const styles = StyleSheet.create({
   },
   menuItem: {
     flexDirection: 'row', 
-    justifyContent: 'space-between', 
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 12, 
-    borderBottomWidth: 1, 
-    borderBottomColor: '#f0f0f0'
   },
   menuText: { fontSize: 16, color: '#333' }
 });
