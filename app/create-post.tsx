@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { collection, addDoc, doc, getDoc, Timestamp } from 'firebase/firestore';
-import { auth, db } from '../firebaseConfig'; // Sesuaikan path
-import { uploadToCloudinary } from '../utils/cloudinaryHelper'; // Helper yang kita buat tadi
+import { addDoc, collection, doc, getDoc, Timestamp } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../constants/Colors';
+import { auth, db } from '../firebaseConfig.js'; // Sesuaikan path
+import { uploadToCloudinary } from '../utils/cloudinaryHelper'; // Helper yang kita buat tadi
 
 export default function CreatePostScreen() {
   const router = useRouter();

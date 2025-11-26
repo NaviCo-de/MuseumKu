@@ -5,7 +5,7 @@ import { useAchievements } from '@/hooks/useAchievements';
 import { Ionicons } from '@expo/vector-icons';
 import { collection, doc, getDoc, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { Colors } from '../../../constants/Colors';
-import { auth, db } from '../../../firebaseConfig'; // Pastikan auth diimport
+import { auth, db } from '../../../firebaseConfig.js'; // Pastikan auth diimport
 
 export default function Homepage() {
   const [posts, setPosts] = useState<any[]>([]);
