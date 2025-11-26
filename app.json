@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "museumku",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,  // UBAH JADI FALSE (Demi kestabilan)
+    "newArchEnabled": true,  // UBAH JADI FALSE (Demi kestabilan)
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.navico.museumku"
